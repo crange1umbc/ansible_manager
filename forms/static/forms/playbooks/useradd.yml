@@ -1,0 +1,56 @@
+---
+
+- name: Create Users
+  hosts: "{{host_name}}"
+  become: true
+  gather_facts: false
+
+  tasks:
+
+  - name: Read CSV
+    set_fact:
+        user_list: "{{lookup('file',vars['csv_file_path']).split('\n')}}"
+
+  - name: Add Users
+    ansible.builtin.user:
+        name: "{{username}}"
+        password: "{{item.split(',')[2]|password_hash('sha512')}}"
+        home: "/home/{{username}}"
+        createhome: yes
+        shell: /bin/bash
+        update_password: on_create
+    delegate_to: "{{hostname}}"
+    when: inventory_hostname == hostname
+    vars:
+        hostname: "{{item.split(',')[0]}}"
+        username: "{{item.split(',')[1]}}"
+    loop: "{{user_list}}"
+    loop_control:
+        loop_var: item
+
+#   - name: Force to change pass on first login
+#     ansible.builtin.shell: chage -d 0 "{{username}}"
+#     delegate_to: "{{hostname}}"
+#     when: inventory_hostname == hostname
+#     vars:
+#         hostname: "{{item.split(',')[0]}}"
+#         username: "{{item.split(',')[1]}}"
+#     loop: "{{user_list}}"
+#     loop_control:
+#         loop_var: item
+
+  - name: Add user to sudo group
+    user:
+        name: "{{username}}"
+        groups: sudo
+        state: present
+    delegate_to: "{{hostname}}"
+    when: inventory_hostname == hostname and sudo == "yes"
+    vars:
+        hostname: "{{item.split(',')[0]}}"
+        username: "{{item.split(',')[1]}}"
+        sudo: "{{item.split(',')[3]}}"
+    loop: "{{user_list}}"
+    loop_control:
+        loop_var: item
+

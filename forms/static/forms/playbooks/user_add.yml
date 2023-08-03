@@ -1,0 +1,51 @@
+---
+
+- name: Create Users
+  hosts: "{{host_name}}"
+  become: true
+  gather_facts: false
+
+  tasks:
+
+  - name: Read JSON
+    set_fact:
+        user_list: "{{ add_users_list | from_json }}"
+
+  - name: Add Users
+    ansible.builtin.user:
+        name: "{{username}}"
+        password: "{{item.split(',')[1]|password_hash('sha512')}}"
+        home: "/home/{{username}}"
+        createhome: yes
+        shell: /bin/bash
+        update_password: on_create
+    
+    vars:
+        
+        username: "{{item.split(',')[0]}}"
+    loop: "{{user_list}}"
+    loop_control:
+        loop_var: item
+
+  - name: Force to change pass on first login
+    ansible.builtin.shell: chage -d 0 "{{username}}"
+    vars:
+        username: "{{item.split(',')[0]}}"
+    loop: "{{user_list}}"
+    loop_control:
+        loop_var: item
+
+  - name: Add user to sudo group
+    user:
+        name: "{{username}}"
+        groups: sudo
+        state: present
+    
+    when: sudo == "yes"
+    vars:
+        username: "{{item.split(',')[0]}}"
+        sudo: "{{item.split(',')[2]}}"
+    loop: "{{user_list}}"
+    loop_control:
+        loop_var: item
+

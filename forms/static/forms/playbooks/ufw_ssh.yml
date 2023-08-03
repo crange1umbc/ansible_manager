@@ -1,0 +1,16 @@
+- name: Add ssh rule to /etc/ufw/before.rules
+  hosts: '{{host_name}}'
+  become: true
+
+  tasks:
+     - name: Add rule before ICMP rules
+       blockinfile:
+          path: /etc/ufw/before.rules
+          block: |
+              # ok ssh to itself
+              -A ufw-before-input -p tcp --dport 22 -j ACCEPT
+
+              # Allow RDP
+              -A ufw-before-input -p tcp --dport 3389 -j ACCEPT
+          insertbefore: '^# ok icmp codes for INPUT'
+       loop: [0] 

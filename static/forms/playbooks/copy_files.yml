@@ -1,0 +1,25 @@
+---
+- name: Copy File
+  hosts: '{{host_name}}'
+  become: true
+  gather_facts: false
+
+  tasks:
+
+  - name: Read CSV
+    set_fact:
+        dir_list: "{{ copy_csv_list | from_json }}"
+
+  
+  - name: Copy file to Remote Machine from local Machine
+    copy:
+        src: "{{item.split(',')[1]}}"
+        dest: "{{item.split(',')[2]}}"
+        
+    delegate_to: "{{hostname}}"
+    when: inventory_hostname == hostname
+    vars:
+        hostname: "{{item.split(',')[0]}}"
+    loop: "{{dir_list}}"
+    loop_control:
+        loop_var: item

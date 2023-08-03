@@ -1,0 +1,9 @@
+- name: Make default copy of before.rules
+  hosts: '{{host_name}}'
+  become: true
+
+  tasks:
+    - name: Backup before.rules
+      command: cp /etc/ufw/before.rules /etc/ufw/before_backup.rules
+
+      

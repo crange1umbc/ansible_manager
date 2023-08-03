@@ -1,0 +1,30 @@
+---
+
+- name: Create Users
+  hosts: "{{host_name}}"
+  become: true
+  gather_facts: false
+
+  tasks:
+
+  - name: Read CSV
+    set_fact:
+        package_list: "{{lookup('file',vars['csv_file_path']).split('\n')}}"
+
+  - name: Gather package facts
+    package_facts:
+        manager: auto
+
+  - name: Install Packages
+    package:
+        name: "{{package_name}}"
+        state: present
+        update_cache: yes
+    delegate_to: "{{hostname}}"
+    when: inventory_hostname == hostname
+    vars:
+        hostname: "{{item.split(',')[0]}}"
+        package_name: "{{item.split(',')[1]}}"
+    loop: "{{package_list}}"
+    loop_control:
+        loop_var: item

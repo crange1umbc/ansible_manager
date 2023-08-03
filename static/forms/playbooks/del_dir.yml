@@ -1,0 +1,19 @@
+---
+- name: Create Directory
+  hosts: '{{host_name}}'
+  become: true
+  gather_facts: false
+
+  tasks:
+
+  - name: Read CSV
+    set_fact:
+        dir_list: "{{ delete_dir_list | from_json }}"
+
+  - name: Delete Directory/file
+    file:
+        path: "{{item.split(',')[0]}}"
+        state: absent
+    loop: "{{dir_list}}"
+    loop_control:
+        loop_var: item

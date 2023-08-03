@@ -1,0 +1,29 @@
+---
+- name: power off vm
+  hosts: localhost
+  gather_facts: false
+  collections:
+    - community.vmware
+
+  pre_tasks:
+    - include_vars: vcenter_vars.yml
+
+  tasks:
+    - name: Read json
+      set_fact:
+          machine_list:"{{ machine_list | from_json }}"
+
+    - name: poweroff
+      vmware_guest_powerstate:
+         hostname: "{{vcenter_hostname}}"
+         username: "{{vcenter_username}}"
+         password: "{{vcenter_password}}"
+         validate_certs: "{{vcenter_validate_certs}}"
+         name: "{{item.split(',')[0]}}"
+         #moid: 'vm-467917'
+         state: powered-off
+      loop: "{{machine_list}}"
+      loop_control:
+         loop_var: item
+
+

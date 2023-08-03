@@ -1,0 +1,11 @@
+
+---
+- name: Gather Facts
+  hosts: node
+  gather_facts: yes
+
+  tasks:
+    - name: Print Gathered Facts
+      debug:
+        var: ansible_facts
+

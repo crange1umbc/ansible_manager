@@ -1,0 +1,45 @@
+---
+- name: Find VM name or MOID from multiple IP addresses and restart VMs
+  hosts: localhost
+  gather_facts: no
+
+  pre_tasks:
+    - include_vars: vcenter_vars.yml
+
+  tasks:
+    - name: Gather facts about VMs
+      community.vmware.vmware_vm_info:
+        hostname: "{{vcenter_hostname}}"
+        username: "{{vcenter_username}}"
+        password: "{{vcenter_password}}"
+        validate_certs: "{{vcenter_validate_certs}}"
+      register: vm_facts
+
+    - name: Print IP addresses of VMs
+      debug:
+        msg: "VM {{ item.key }} "
+      with_dict: "{{ vm_facts.virtual_machines }}"
+      
+   # - name: Get VM name or MOID from multiple IP addresses
+    #  set_fact:
+     #   vm_names_moids: "{{ vm_names_moids | default([]) + [ {'ip': item, 'name': #vm_facts.virtual_machines[item].name, 'moid': vm_facts.virtual_machines[item].moid} ] }}"
+ #     loop: "{{ host_name }}"
+  #    when: vm_facts.virtual_machines[item].guest.ip_address == item
+
+#- name: Restart VMs using VMware PowerState
+ # hosts: localhost
+  #gather_facts: no
+
+  #tasks:
+   # - name: Restart the VM
+    #  community.vmware.vmware_guest_powerstate:
+     #   hostname: "{{vcenter_hostname}}"
+     #   username: "{{vcenter_username}}"
+      #  password: "{{vcenter_password}}"
+      #  validate_certs: "{{vcenter_validate_certs}}"
+        #name: "{{ item.name }}"
+      #  moid: "{{ item.moid }}"
+      #  state: restarted
+      #loop: "{{ vm_names_moids }}"
+      #when: item.moid is defined
+

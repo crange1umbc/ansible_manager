@@ -1,0 +1,20 @@
+---
+- name: Create Directory
+  hosts: '{{host_name}}'
+  become: true
+  gather_facts: false
+
+  tasks:
+
+  - name: Read CSV
+    set_fact:
+        dir_list: "{{ create_dir_list | from_json }}"
+
+  - name: Create Directories
+    file:
+        path: "{{item.split(',')[0]}}"
+        state: directory
+        mode: "{{item.split(',')[1] | default('0755')}}"
+    loop: "{{dir_list}}"
+    loop_control:
+        loop_var: item

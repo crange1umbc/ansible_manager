@@ -1,0 +1,46 @@
+---
+- name: Install Falco
+  hosts: all
+  become: true
+
+  tasks:
+       - name: Install required packages
+         apt:
+            name:
+               - git
+               - sysdig
+               - curl
+            state: present
+
+       - name: Create Falco directory
+         file:
+            path: /home/bhargavi/falco
+            state: directory
+
+       - name: Change to falco directory
+         shell: cd /home/bhargavi/falco
+         args:
+            chdir: /home/bhargavi/falco
+
+       - name: Download falco package
+         get_url: 
+            url: https://download.falco.org/packages/bin/x86_64/falco-0.32.0-x86_64.tar.gz
+            dest: /home/bhargavi/falco/falco-0.32.0-x86_64.tar.gz
+
+
+       - name: Extract Falco Package
+         shell: tar -xvf /home/bhargavi/falco/falco-0.32.0-x86_64.tar.gz
+         args:
+            chdir: /home/bhargavi/falco
+
+       - name: Copy falco files
+         copy:
+            src: /home/bhargavi/falco/falco-0.32.0-x86_64/
+            dest: /
+            remote_src: true
+
+       - name: Set permissions for copied files
+         file:
+            path:
+       - name: Load Falco Driver
+         shell: sudo falco-driver-loader

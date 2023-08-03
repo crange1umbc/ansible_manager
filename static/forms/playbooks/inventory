@@ -1,0 +1,22 @@
+localhost
+crange1@130.85.121.26
+crange1@130.85.121.27
+
+[vmservers]
+crange1@130.85.121.26
+crange1@130.85.121.27
+
+[proxy]
+bhargavi@130.85.121.29
+
+[node]
+crange1@133.228.78.3
+
+[node:vars]
+ansible_ssh_common_args='-o ProxyJump=bhargavi@130.85.121.29 -A'
+
+
+[cmsc626]
+cmscuser@130.85.220.202
+cmscuser@133.228.123.3
+cmscuser@133.228.123.1

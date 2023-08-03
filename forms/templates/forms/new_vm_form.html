@@ -1,0 +1,154 @@
+{% extends "forms/base.html" %}
+{% block content %}  
+<div class="container form-container">
+    <h1>New VM Request</h1>
+    <div class="vm_form">
+        <form action="{% url 'new_vm' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+            <fieldset>
+                <label class="fieldset-heading">Course Information</label>
+                <p class="text-muted">Please provide information about the Course, Faculty and TA's.</p>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label for="course_number">Course Number</label>
+                        <input type="text" class="form-control" id="course_number" name="course_number" placeholder="Eg: CMSC626" required>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="course_name">Course Name</label>
+                        <input type="text" class="form-control" id="course_name" name="course_name" placeholder="Eg: Principles of Computer Security" required>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="instructor_name">Instructor Name</label>
+                        <input type="text" class="form-control" name="instructor_name" id="instructor_name" placeholder="Eg: Ram Rustagi" required>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="ta_name">TA Name's</label>
+                        <p class="text-muted">Give comma-separated list of TA's names with their UID's</p>
+                        <input type="text" class="form-control" name="ta_name" id="ta_name" placeholder="Eg: Bhargavi:UH23252, Darshan:GH23531" required>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="sem">Select Semester</label>
+                        <select class='form-select' name="sem" id="sem">
+                            <option value="fall" selected>Fall</option>
+                            <option value="spring">Spring</option>
+                            <option value="summer">Summer</option>
+                            <option value="winter">Winter</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="year">Year</label>
+                        <input type="number" min='2023' max='2025' class="form-control" name="year" id="year" value="2023">
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="description">Short Description of why VM's are required</label>
+                        <textarea class="form-control" name="description" id="description"></textarea>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset>
+                <label class="fieldset-heading">VM Configuration</label>
+                <p class="text-muted">Fill the required configuration for the VM's to be configured</p>
+                <div class='form-row'>
+                    <div class="form-group col-md-12">
+                        <label for="os">Select Operating System</label>
+                        <select class='form-select' name="os" id="os">
+                            <option value="kali">Kali</option>
+                            <option value="ub20">Ubuntu-20</option>
+                            <option value="ub22" selected>Ubuntu-22</option>
+                            <option value="win7">Windows 7</option>
+                            <option value="win8">Windows 8</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="num_cpu">No. of CPU's</label>
+                        <input type="number" class="form-control" id="num_cpu" value="1">
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="ram">Memory (RAM) in GB</label>
+                        <input type="number" class="form-control" name="ram" id="ram" value="2">
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="extra_ram">If more than 8 GB Ram required, please justify!</label>
+                        <textarea class="form-control" id="extra_ram" name="extra_ram"></textarea>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="disk">Hard Disk in GB</label>
+                        <input type="number" class="form-control" name="disk" id="disk" value="16">
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="extra_disk">If more than 128 GB Hard Disk required, please justify!</label>
+                        <textarea class="form-control" id="extra_disk" name="extra_disk"></textarea>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="num_vm">Number of VM's to be created with above specification</label>
+                        <input type="number" class="form-control" name="num_vm" id="num_vm" value="10" required>
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="start_date">When should these VM's be created (start date)</label>
+                        <input type="date" class="form-control" name="start_date" id="start_date">
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label for="end_date">When should these VM's be deleted (end date)</label>
+                        <input type="date" class="form-control" name="end_date" id="end_date">
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset>
+                <label class="fieldset-heading">VM Users</label>
+                <p class="text-muted">Provide information to add users while creating New VM's</p>
+                <div class="form-group col-md-12">
+                    <label for="sudo">Do you want yourself to be added as sudo user?</label>
+                    <select class='form-select' name="sudo" id="sudo">
+                        <option value="yes" selected>Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-12">
+                    <label for="user_add">Give list of users to be added</label>
+                    <p class="text-muted">Format: username,password,make_sudo</p>
+                    <textarea class="form-control" name="user_add" id="user_add" placeholder="bhargavi,bhargavi@pass,yes&#10darshan,darshan@pass,no"></textarea>
+                </div>
+                <div class="form-group col-md-12">
+                    <label for="user_add_file">If too many users, you can upload a csv file</label>
+                    <input type="file" name="user_add_file" accept='.csv' class="form-control" id="user_add">
+                </div>
+
+            </fieldset>
+            <div class="block-button"><button type="submit" class="btn btn-primary btn-block">Create VM</button></div>
+        </form>
+    </div>
+</div>
+<div id="loader" class="text-center mt-3 not-visible">
+    <div class="spinner-border" role="status"></div>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+<script>
+    var spinner=$('#loader');
+    $(function(){
+        $('form').submit(function(e){
+            e.preventDefault();
+            var formData=new FormData(this);
+            spinner.show();
+            $.ajax({
+                url:'{% url "new_vm" %}',
+                data:formData,
+                processData: false,
+                contentType:false,
+                type:'POST',
+                
+            }).done(function(response){
+                spinner.hide();
+                alert(response.message);
+                window.location.reload();
+
+            });
+        });
+    });
+</script>
+{% endblock content%}
+   
+
+  

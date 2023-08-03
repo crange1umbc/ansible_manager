@@ -1,0 +1,42 @@
+- name: Reset ufw rules
+  hosts: '{{host_name}}'
+  become: true
+
+  tasks:
+    - name: Replace before.rules with default copy
+      copy:
+        src: /etc/ufw/before_backup.rules
+        dest: /etc/ufw/before.rules
+        remote_src: yes
+        owner: root
+        group: root
+        mode: '0644'
+      
+    - name: Add rule before ICMP rules
+      blockinfile:
+        path: /etc/ufw/before.rules
+        block: |
+            # ok ssh to itself
+            -A ufw-before-input -p tcp --dport 22 -j ACCEPT
+
+            # Allow RDP
+            -A ufw-before-input -p tcp --dport 3389 -j ACCEPT
+        insertbefore: '^# ok icmp codes for INPUT'
+      loop: [0] 
+    
+    - name: Disable ufw
+      command: ufw disable
+      ignore_errors: yes
+    
+    - name: Reset ufw
+      shell: echo y | ufw reset
+      ignore_errors: yes
+
+    - name: Enable ufw
+      command: ufw enable
+    
+    
+    
+
+
+      

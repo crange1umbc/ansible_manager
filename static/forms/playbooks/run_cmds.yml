@@ -1,0 +1,21 @@
+---
+- name: Create Directory
+  hosts: '{{host_name}}'
+  become: true
+  gather_facts: false
+
+  tasks:
+
+  - name: Read CSV
+    set_fact:
+        cmd_list: "{{lookup('file',vars['csv_file_path']).split('\n')}}"
+
+  - name: Execute Commands
+    shell: "{{item.split(',')[1]}}"
+    delegate_to: "{{hostname}}"
+    when: inventory_hostname == hostname
+    vars:
+        hostname: "{{item.split(',')[0]}}"
+    loop: "{{cmd_list}}"
+    loop_control:
+        loop_var: item

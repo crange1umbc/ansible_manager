@@ -1,0 +1,23 @@
+---
+
+- name: Remove Users
+  hosts: '{{host_name}}'
+  become: true
+  gather_facts: false
+
+  tasks:
+
+  - name: Read JSON
+    set_fact:
+        user_list: "{{ remove_users_list | from_json }}"
+
+  - name: Remove Users
+    user:
+        name: "{{username}}"
+        state: absent
+        remove: yes
+    vars:
+        username: "{{item.split(',')[0]}}"
+    loop: "{{user_list}}"
+    loop_control:
+        loop_var: item

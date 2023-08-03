@@ -1,0 +1,51 @@
+---
+- name: deploy vm from template
+  hosts: localhost
+  gather_facts: false
+  collections:
+    - community.vmware
+  pre_tasks:
+    - include_vars: vcenter_vars.yml
+  tasks:
+    - name: create VM folder
+      vcenter_folder:
+        hostname: "{{ vcenter_hostname }}"
+        username: "{{ vcenter_username }}"
+        password: "{{ vcenter_password }}"
+        validate_certs: "{{ vcenter_validate_certs }}"
+        datacenter_name: "{{vcenter_datacenter}}"
+        folder_name: "{{ create_folder_name }}"
+        folder_type: vm
+        state: present
+
+    - name: deploy VM from template
+      vmware_guest:
+        hostname: "{{vcenter_hostname}}"
+        username: "{{vcenter_username}}"
+        password: "{{vcenter_password}}"
+        validate_certs: "{{vcenter_validate_certs}}"
+        datacenter: "{{vcenter_datacenter}}"
+        cluster: "{{vcenter_cluster}}"
+        name: "{{create_vm_name}}-{{'{:02d}'.format(item)}}"
+        folder: "{{create_folder_name}}"
+        template: "{{create_template}}"
+        state: "{{vm_state}}"
+        wait_for_ip_address: yes
+        networks:
+          - name: "{{vm_network}}"
+            dhcp: yes
+      
+      loop: "{{range(1,num_vm+1)}}"
+      loop_control:
+        loop_var: item
+      register: vm_deploy_results
+     
+    - name: Display VM IPs
+      debug: 
+        msg: "VM {{item.item.name}} IP:{{item.ansible_facts.ansible_default_ipv4.address}}"
+      loop: "{{vm_deploy_results.results}}"
+        
+   
+      
+      
+

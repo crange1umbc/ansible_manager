@@ -1,0 +1,27 @@
+---
+- name: Restart VM
+  hosts: localhost
+  gather_facts: false
+  collections:
+   - community.vmware
+
+  pre_tasks:
+   - include_vars: vcenter_vars.yml
+
+
+  tasks:
+   - name: Read json
+     set_fact:
+        machine_list: "{{ machine_list|from_json}}"
+        
+   - name: Restart vm
+     vmware_guest_powerstate:
+        hostname: "{{vcenter_hostname}}"
+        username: "{{vcenter_username}}"
+        password: "{{vcenter_password}}"
+        validate_certs: "{{vcenter_validate_certs}}"
+        name: "{{item.split(',')[0]}}"
+        state: restarted
+     loop: "{{machine_list}}"
+     loop_control:
+        loop_var: item
