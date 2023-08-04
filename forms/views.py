@@ -32,9 +32,11 @@ VM_TEMPLATES={
 become_password='Crcsee2#'
 static=settings.STATIC_ROOT
 inventory_path=static+'/forms/playbooks/inventory'
-private_key_file='~/.ssh/ansible'
 vault_password_cmd='--vault-password-file '+static+'/forms/playbooks/pass.txt'
+ssh_key_path=static+'/forms/playbooks/ansible'
 
+with open(ssh_key_path,'r') as key_file:
+    private_key_file=key_file.read()
 
 #ansible_runner_config_file=static+'/forms/playbooks/ansible.cfg'
 
