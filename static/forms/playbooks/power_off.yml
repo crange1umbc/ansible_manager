@@ -5,8 +5,8 @@
   collections:
     - community.vmware
 
-  pre_tasks:
-    - include_vars: vcenter_vars.yml
+  vars_files:
+    - secret.yml
 
   tasks:
     - name: Read json
@@ -20,7 +20,6 @@
          password: "{{vcenter_password}}"
          validate_certs: "{{vcenter_validate_certs}}"
          name: "{{item.split(',')[0]}}"
-         #moid: 'vm-467917'
          state: powered-off
       loop: "{{machine_list}}"
       loop_control:

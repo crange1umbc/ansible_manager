@@ -4,8 +4,8 @@
   gather_facts: false
   collections:
     - community.vmware
-  pre_tasks:
-    - include_vars: vcenter_vars.yml
+  vars_files:
+    - secret.yml
   tasks:
     - name: create VM folder
       vcenter_folder:
@@ -25,7 +25,7 @@
         password: "{{vcenter_password}}"
         validate_certs: "{{vcenter_validate_certs}}"
         datacenter: "{{vcenter_datacenter}}"
-        cluster: "{{vcenter_cluster}}"
+        #cluster: "{{vcenter_cluster}}"
         name: "{{create_vm_name}}-{{'{:02d}'.format(item)}}"
         folder: "{{create_folder_name}}"
         template: "{{create_template}}"
@@ -33,6 +33,7 @@
         wait_for_ip_address: yes
         networks:
           - name: "{{vm_network}}"
+            connected: yes
             dhcp: yes
       
       loop: "{{range(1,num_vm+1)}}"
@@ -42,7 +43,7 @@
      
     - name: Display VM IPs
       debug: 
-        msg: "VM {{item.item.name}} IP:{{item.ansible_facts.ansible_default_ipv4.address}}"
+        msg: "{{item.instance.ipv4}}"
       loop: "{{vm_deploy_results.results}}"
         
    

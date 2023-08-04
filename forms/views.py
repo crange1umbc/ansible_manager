@@ -26,13 +26,15 @@ IP_NAME={
 VM_TEMPLATES={
    'kali':'CyberRange/vm/CRCSEE/Template/Template-Kali-crg',
    'ub20':'CyberRange/vm/CRCSEE/Template/template-ub20',
-   'ub22':'CyberRange/vm/CRCSEE/Template/Temp-ub22',
+   'ub22':'CyberRange/vm/bhargavi/ub-22-template',
 }
 
 become_password='Crcsee2#'
 static=settings.STATIC_ROOT
 inventory_path=static+'/forms/playbooks/inventory'
 private_key_file='~/.ssh/ansible'
+vault_password_cmd='--vault-password-file '+static+'/forms/playbooks/pass.txt'
+
 
 #ansible_runner_config_file=static+'/forms/playbooks/ansible.cfg'
 
@@ -64,7 +66,8 @@ def new_vm(request):
             'num_vm':int(num_vm)
         }
         options={
-            'extravars':extra_vars
+            'extravars':extra_vars,
+            'cmdline':vault_password_cmd,
         }
         run(playbook=playbook_path,**options)
         
@@ -93,7 +96,8 @@ def power_on(request):
             'envvars':{
                 'ANSIBLE_SUDO_PASS':become_password,
             },
-            'extravars':extra_vars
+            'extravars':extra_vars,
+            'cmdline':vault_password_cmd,
         }
         result=run(playbook=playbook_path,**options)
         if result.rc==0:
@@ -118,7 +122,8 @@ def power_off(request):
             'envvars':{
                 'ANSIBLE_SUDO_PASS':become_password,
             },
-            'extravars':extra_vars
+            'extravars':extra_vars,
+            'cmdline':vault_password_cmd,
         }
         result=run(playbook=playbook_path,**options)
         if result.rc==0:
@@ -143,7 +148,8 @@ def restart(request):
             'envvars':{
                 'ANSIBLE_SUDO_PASS':become_password,
             },
-            'extravars':extra_vars
+            'extravars':extra_vars,
+            'cmdline':vault_password_cmd,
         }
         result=run(playbook=playbook_path,**options)
         if result.rc==0:
