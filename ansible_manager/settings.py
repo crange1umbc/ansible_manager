@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-3e!+vg9^sn7*mdqcbml87g)d*2sd9#_5iblag&4bl5mo@m$zls
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['130.85.29.155','127.0.0.1']
+ALLOWED_HOSTS = ['130.85.29.155','127.0.0.1','ansible1.crange.umbc.edu']
 
 
 # Application definition
@@ -54,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_session_timeout.middleware.SessionTimeoutMiddleware',
 ]
 
 ROOT_URLCONF = 'ansible_manager.urls'
@@ -139,3 +140,8 @@ CRISPY_TEMPLATE_PACK='bootstrap4'
 LOGIN_REDIRECT_URL ='dashboard'
 LOGIN_URL='login'
 SECURE_CROSS_ORIGIN_OPENER_POLICY=None
+SESSION_EXPIRE_SECONDS=1800
+SESSION_EXPIRE_AFTER_LAST_ACTIVITY=True
+SESSION_TIMEOUT_REDIRECT='dashboard'
+SESSION_EXPIRE_AT_BROWSER_CLOSE=True
+
