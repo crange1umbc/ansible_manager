@@ -13,4 +13,7 @@ urlpatterns=[
     path('manage_vm/create_dir',views.create_dir,name='create_dir'),
     path('manage_vm/delete_dir',views.delete_dir,name='delete_dir'),
     path('open-exercise/<int:exercise_id>/',views.open_pdf,name='open-exercise'),
+    path('crypt_request_form',views.crypt,name='crypt'),
+    path('crypt_request',views.crypt_request,name='crypt_request'),
+    path('download_csv/<int:request_id>',views.download_csv,name="download_csv")
 ]

@@ -10,10 +10,9 @@ import json
 import pandas as pd
 import random
 from django.contrib.auth.decorators import login_required
-from .models import Exercise
-from .models import VM
-from .models import VMRequest
+from .models import Exercise,VM,VMRequest,CryptRequest,CryptText
 from dotenv import load_dotenv
+import csv
 
 load_dotenv()
 # Create your views here.
@@ -261,6 +260,7 @@ def delete_dir(request):
                 'host_name':delete_host_name,
                 'delete_dir_list':delete_dir_list
             }
+            result=ansible_run(playbook_path,extra_vars)
             if result.rc==0:
                 return JsonResponse({'message':"Directory Deleted successfully"})
             else:
@@ -290,6 +290,341 @@ def open_pdf(request,exercise_id):
         response['Content-Disposition']=f'inline; filename="{exercise.pdf_file.name}"'
         return response
 
+def get_plaintexts_from_file(filepath,num):
+    with open(filepath,"r") as file:
+        text=file.read()
+        file.close()
+    plaintexts=text.split("\n\n")
+    return plaintexts[:num]
+
+@login_required
+def crypt(request):
+    if request.method=='POST':
+        technique=request.POST.get('tech')
+        random_key='yes' if technique=='ceaser' or technique=='vernam' else request.POST.get('random_key') 
+        key=request.POST.get('key')
+        if random_key=='no':
+            if key=='':
+                return JsonResponse({'message':"Key not provided. If you don't want to give key, select random key"})
+        default=request.POST.get('default')
+        num=request.POST.get('num_cipher')
+        if default=='no':
+            if request.POST.get('plain')=='':
+                return JsonResponse({'message':"Plaintext not provided. If you don't want to give plaintext, select default plaintext"})
+            else:
+                plaintexts=[r for r in request.POST.get('plain').split('\n\n')]
+        else:
+            if num=='':
+                return JsonResponse({'message':"Number of ciphertext not given"})
+            file_path=static+"/forms/default_Plain.txt"
+            plaintexts=get_plaintexts_from_file(file_path,int(num))
+        ip_addr=request.POST.get('ip_addr')
+        
+        crypt_request=CryptRequest(user=request.user,technique=technique,random_key=random_key,key=key,num_cipher=num,ip_address_list=ip_addr)
+        crypt_request.save()
+
+        if technique=='rotation':
+            if key.isdigit():
+                ciphertexts,keys=rotation(plaintexts,key)
+            else:
+                return JsonResponse({'message':"Key for rotation cipher should be a number"})
+        elif technique=='ceaser':
+            ciphertexts,keys=ceaser(plaintexts)
+        elif technique=='transposition':
+            ciphertexts,keys=transposition(plaintexts,key)
+        elif technique=='vernam':
+            ciphertexts,keys=vernam(plaintexts)
+        elif technique=='vigenere':
+            ciphertexts,keys=vigenere(plaintexts,key)
+
+        if ip_addr!='':
+            ip_address=[r.strip() for r in ip_addr.split(',')]
+            host_name=[f'crange1@{r.strip()}' for r in ip_addr.split(',')]
+            
+            if len(host_name)!=len(ciphertexts):
+                return JsonResponse({'message':"Number of ip_address is incorrect, it should be same as number of plaintexts"})
+
+            cipher=[]
+            for i in range(len(host_name)):
+                cipher.append(host_name[i]+','+ ciphertexts[i])
+            
+            cipher_list=json.dumps(cipher)
+            playbook_path=static+'/forms/playbooks/crypt.yml'
+            extra_vars={
+                'host_name':host_name,
+                'cipher_list':cipher_list
+            }
+            result=ansible_run(playbook_path,extra_vars)
+            if result.rc==0:
+                for i in range(len(ciphertexts)):
+                    text=CryptText(cryptreq=crypt_request,plaintext=plaintexts[i],ciphertext=ciphertexts[i],key=keys[i],ip_addr=ip_address[i])
+                    text.save()
+                return JsonResponse({'message':"Ciphertexts copied successfully"})
+            else:
+                return JsonResponse({'message':"Ciphertexts copy failed"})
+        else:
+            for i in range(len(ciphertexts)):
+                text=CryptText(cryptreq=crypt_request,plaintext=plaintexts[i],ciphertext=ciphertexts[i],key=keys[i])
+                text.save()
+            return JsonResponse({'message':"Ciphertexts creates successfully"})
+
+    else:
+        return render(request,'forms/crypt.html')
 
 
 
+def ceaser(plaintexts):
+
+    Ciphertexts=[]
+    keys=[]
+
+    plainu = [ chr(letter) for letter in range(65, 65+26)] # Uppercase Letters
+    plainl = [ chr(letter) for letter in range(97, 97+26)] # Lowercase Letters
+    plainm = [' ', '.'] 
+    
+    # Combine upper, lower and symbols
+    plain = plainu + plainl + plainm
+   
+    for i in range(len(plaintexts)):
+
+        cipheru = [ chr(letter) for letter in range(65, 65+26)] 
+        cipherl = [ chr(letter) for letter in range(97, 97+26)]
+        cipherm = ['@', '_']
+
+        # Shuffle cipher chars randomly
+        random.shuffle(cipheru)
+        random.shuffle(cipherl)
+        random.shuffle(cipherm)
+
+        cipher = cipheru + cipherl + cipherm
+        
+        ciphertext=[]
+        keycount = dict()
+        for ch in plaintexts[i]: # For every character in plaintext
+            if ch in plain: # If it is in plain
+                index = plain.index(ch) # Get index of the plain
+                ciphertext.append(cipher[index]) # append the cipher at that index in cipher
+
+                # To keep frequency count
+                if ch not in plainm: # If ch is a letter (and not symbol)
+                    val = keycount.get(ch,0) # Get Value(count) of char, return 0 if char not in keycount
+                    keycount[ch] = val + 1 # Increment the count 
+            else:
+                ciphertext.append(ch) # If plaintext is not a upper, lower, space and dot, dont replace
+
+        Ciphertexts.append(''.join(ciphertext))
+        key=''.join(plain)+'\n'+''.join(cipher)
+        keys.append(key)
+    return (Ciphertexts,keys)
+
+def rotation(plaintexts,key):
+
+    Ciphertexts=[]
+    keys=[]
+
+    plainu = [ chr(letter) for letter in range(65, 65+26)] # Uppercase Letters
+    plainl = [ chr(letter) for letter in range(97, 97+26)] # Lowercase Letters
+    plainm = [' ', '.'] 
+    
+    # Combine upper, lower and symbols
+    plain = plainu + plainl + plainm
+
+    for i in range(len(plaintexts)):
+        
+        if key!='':
+            rot_key=int(key)
+        else:
+            rot_key = random.choice([num for num in range(1, 101) if num % 26 != 0])
+
+        cipheru = [ chr(((letter-65+rot_key) % 26)+65) for letter in range(65, 65+26)] 
+        # Rotate each letter by key
+        cipherl = [ chr(((letter-97+rot_key) % 26)+97) for letter in range(97, 97+26)]
+        cipherm = ['@', '_']
+
+        cipher = cipheru + cipherl + cipherm
+        ciphertext = [] # List for cipertext
+
+        for ch in plaintexts[i]: # For every character in plaintext
+            if ch in plain: # If it is in plain
+                index = plain.index(ch) # Get index of the plain
+                ciphertext.append(cipher[index]) # append the cipher at that index in cipher
+
+            else:
+                ciphertext.append(ch) # If plaintext is not a upper, lower, space and dot, dont replace
+        Ciphertexts.append(''.join(ciphertext))
+        keys.append(rot_key)
+
+    return (Ciphertexts,keys)
+
+def vernam(plaintexts):
+    Ciphertexts=[]
+    keys=[]
+
+    cipherm = ['@', '_']
+
+    plainu = [ chr(letter) for letter in range(65, 65+26)] # Uppercase Letters
+    plainl = [ chr(letter) for letter in range(97, 97+26)] # Lowercase Letters
+    plainm = [' ', '.'] 
+
+    # Combine upper, lower and symbols
+    plain = plainu + plainl + plainm
+    
+    for i in range(len(plaintexts)):
+
+        keytext=""
+        for _ in range(len(plaintexts[i])):
+            random_char = chr(random.randint(65, 90))
+            keytext += random_char
+
+        ciphertext = [] # List for cipertext
+
+        for idx in range(len(plaintexts[i])): # For every character in plaintext
+            
+            if plaintexts[i][idx] in plainu: # If it is in plain
+                rot_key=ord(keytext[idx])-ord('A')
+                subs=chr(((ord(plaintexts[i][idx])-65^rot_key) % 26)+65)
+                ciphertext.append(subs)
+            elif plaintexts[i][idx] in plainl:
+                rot_key=ord(keytext[idx])-ord('A')
+                subs=chr(((ord(plaintexts[i][idx])-97^rot_key) % 26)+97)
+                ciphertext.append(subs)
+            elif plaintexts[i][idx] in plainm:
+                index = plainm.index(plaintexts[i][idx]) # Get index of the plain
+                ciphertext.append(cipherm[index])
+            else:
+                ciphertext.append(plaintexts[i][idx]) 
+                # If plaintext is not a upper, lower, space and dot, dont replace
+        
+        Ciphertexts.append(''.join(ciphertext))
+        keys.append(keytext)
+
+    return (Ciphertexts,keys)
+
+def vigenere(plaintexts,key):
+
+    Ciphertexts=[]
+    keys=[]
+
+    plainu = [ chr(letter) for letter in range(65, 65+26)] # Uppercase Letters
+    plainl = [ chr(letter) for letter in range(97, 97+26)] # Lowercase Letters
+    plainm = [' ', '.'] 
+
+    cipherm = ['@', '_']
+
+    for i in range(len(plaintexts)):
+
+        if key!='':
+            keytext=key.upper()
+        else:
+            keytext=""
+            for _ in range(10):
+                random_char = chr(random.randint(65, 90))
+                keytext += random_char
+
+        ciphertext = [] # List for cipertext
+
+        for idx in range(len(plaintexts[i])): # For every character in plaintext
+            
+            if plaintexts[i][idx] in plainu: # If it is in plain
+                rot_key=ord(keytext[idx%len(keytext)])-ord('A')
+                subs=chr(((ord(plaintexts[i][idx])-65+rot_key) % 26)+65)
+                ciphertext.append(subs)
+            elif plaintexts[i][idx] in plainl:
+                rot_key=ord(keytext[idx%len(keytext)])-ord('A')
+                subs=chr(((ord(plaintexts[i][idx])-97+rot_key) % 26)+97)
+                ciphertext.append(subs)
+            elif plaintexts[i][idx] in plainm:
+                index = plainm.index(plaintexts[i][idx]) # Get index of the plain
+                ciphertext.append(cipherm[index])
+            else:
+                ciphertext.append(plaintexts[i][idx]) # If plaintext is not a upper, lower, space and dot, dont replace
+        
+        Ciphertexts.append(''.join(ciphertext))
+        keys.append(keytext)
+
+    return (Ciphertexts,keys)
+
+
+def transposition(plaintexts,key):
+
+    Ciphertexts=[]
+    keys=[]
+
+    for idx in range(len(plaintexts)):
+
+        ciphertext = [] # List for ciphertext
+
+        plain=plaintexts[idx].replace(" ","@")
+        plain=plain.replace(".","_")
+
+        if key!='':
+            keytext=key
+        else:    
+            key_length=random.randint(10,20)
+        
+            keytext=""
+
+            for _ in range(key_length):
+                random_char = chr(random.randint(65, 90))
+                keytext += random_char
+
+        l_key = list(keytext) # list of key characters 
+        s_key = sorted(l_key) # sorted key 
+
+        plain_list = list(plain) # list of plain cipher text characters 
+
+        # # Encryption 
+
+        rem = len(plaintexts[idx]) % len(keytext) 
+        emp = len(keytext)-rem # Finding empty characters at the end in matrix 
+        
+        for i in range(emp): 
+            plain_list.append('@') # replacing empty space at the end with @
+
+        matrix = [[] for j in range(len(keytext))] 
+        cipher = [] 
+
+        for i in range(len(matrix)): 
+            for j in range(i, len(plain_list), len(keytext)): 
+                matrix[i].append(plain_list[j])
+
+        mat_t=list(map(list, zip(*matrix)))
+
+        # Rearranging matrix according to the key 
+        for i in range(len(keytext)): 
+            cipher.append(matrix[l_key.index(s_key[i])]) 
+
+        cip_t=list(map(list, zip(*cipher)))
+
+        # Converting matrix to list 
+        for i in range(len(keytext)): 
+            cipher[i] = ''.join(cipher[i]) 
+
+        # Converting list to string 
+        ciphertext = ''.join(cipher) 
+
+        Ciphertexts.append(''.join(ciphertext))
+        keys.append(keytext)
+
+    return (Ciphertexts,keys)
+
+@login_required
+def crypt_request(request):
+    user=request.user
+    crypt_requests=CryptRequest.objects.filter(user=user)
+    return render(request,'forms/crypt_request.html',{'crypt_requests':crypt_requests})
+
+@login_required
+def download_csv(request, request_id):
+    response=HttpResponse(content_type='text_csv')
+    response['Content-Disposition']='attachment; filename="ciphertexts.csv"'
+
+    writer=csv.writer(response)
+    writer.writerow(['Plaintext','Ciphertext','Key','IP Address'])
+
+    ciphertexts=CryptText.objects.filter(cryptreq=request_id)
+
+    for cipertext in ciphertexts:
+        writer.writerow([cipertext.plaintext,cipertext.ciphertext,cipertext.key,cipertext.ip_addr])
+    
+    return response

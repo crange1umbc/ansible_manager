@@ -16,7 +16,7 @@ class VMRequest(models.Model):
     course_name=models.CharField(max_length=200)
     instructor_name=models.CharField(max_length=200)
     ta_name=models.CharField(max_length=200)
-    description=models.TextField()
+    description=models.TextField(null=True)
     semester=models.CharField(max_length=200)
     year=models.PositiveSmallIntegerField()
     os=models.CharField(max_length=200)
@@ -42,6 +42,23 @@ class VM(models.Model):
     vm_name=models.CharField(max_length=200)
     os=models.CharField(max_length=200)
     template=models.CharField(max_length=200)
+
+class CryptRequest(models.Model):
+    user=models.ForeignKey(User,on_delete=models.CASCADE)
+    technique=models.CharField(max_length=200)
+    random_key=models.CharField(max_length=200)
+    key=models.CharField(max_length=300,null=True)
+    num_cipher=models.PositiveSmallIntegerField(null=True)
+    ip_address_list=models.TextField(null=True)
+
+class CryptText(models.Model):
+    cryptreq=models.ForeignKey(CryptRequest,on_delete=models.CASCADE)
+    plaintext=models.TextField()
+    ciphertext=models.TextField()
+    key=models.TextField()
+    ip_addr=models.CharField(max_length=200, null=True)
+
+
     
 
 

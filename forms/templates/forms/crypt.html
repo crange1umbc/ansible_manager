@@ -1,0 +1,97 @@
+{% extends "forms/base.html" %}
+{% block content %}  
+<div class="container form-container">
+    <h1>Cryptography</h1>
+    <div class="vm_form">
+        <form action="{% url 'crypt' %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+            <fieldset>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label for="tech">Select Cryptography Technique</label>
+                        <select class='form-select' name="tech" id="tech">
+                            <option value="ceaser" selected>Ceaser Cipher</option>
+                            <option value="rotation">Rotation Cipher</option>
+                            <option value="transposition">Transposition Cipher</option>
+                            <option value="vernam">Vernam</option>
+                            <option value="vigenere">Vigenere</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-md-12">
+                        <label for="random_key">Do you want the key to be random? (For Vernam and Ceaser Cipher Key is not required)</label>
+                        <select class='form-select' name="random_key" id="random_key">
+                            <option value="yes" selected>Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-md-12">
+                        <label for="key">If no random_key, then please provide a key (except for Ceaser and Vernam). Please don't have space or special characters in keys</label>
+                        <input type="text" class="form-control" id="key" name="key" placeholder="" >
+                    </div>
+
+                    <div class="form-group col-md-12">
+                        <label for="default">Do you want default plaintexts?</label>
+                        <select class='form-select' name="default" id="default">
+                            <option value="yes" selected>Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col-md-12">
+                        <label for="plain">Please give plaintexts separated by a line if don't want to use default.</label>
+                        <textarea class="form-control" name="plain" id="plain"></textarea>
+                    </div>
+
+                    <div class="form-group col-md-12">
+                        <label for="num_cipher">If using default plaintext, give the number of ciphertexts to be generated</label>
+                        <input type="number" min="1" max="40" class="form-control" id="num_cipher" name="num_cipher" placeholder="" >
+                    </div>
+
+                    <div class="form-group col-md-12">
+                        <label for="ip_addr">If you want to copy ciphertext to a machine, please give list of ip_addresses to be copied to. (Give comma-separated list. Eg: 192.181.29.1, 192.81.21.1)</label>
+                        <textarea class="form-control" name="ip_addr" id="ip_addr"></textarea>
+                    </div>
+                    
+                </div>
+            </fieldset>
+           
+            <div class="block-button"><button type="submit" class="btn btn-primary btn-block">Create Cipher</button></div>
+        </form>
+    </div>
+</div>
+<div id="loader" class="text-center mt-3 not-visible">
+    <div class="spinner-border" role="status"></div>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+<script>
+    var spinner=$('#loader');
+    $(function(){
+        $('form').submit(function(e){
+            e.preventDefault();
+            var formData=new FormData(this);
+            spinner.show();
+            $.ajax({
+                url:'{% url "crypt" %}',
+                data:formData,
+                processData: false,
+                contentType:false,
+                type:'POST',
+                
+            }).done(function(response){
+                spinner.hide();
+                alert(response.message);
+                window.location.reload();
+
+            });
+        });
+    });
+</script>
+{% endblock content%}
+   
+
+  

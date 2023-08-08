@@ -1,0 +1,39 @@
+{% extends "forms/base.html" %}
+{% block content %}  
+<h1>Cryptography Requests</h1>
+<div class="block-button"><a href="{% url 'crypt' %}" class="btn btn-primary btn-lg btn-block">New VM Request</a>  
+</div>
+<div class='table-responsive'>
+  <table class="table table-striped mytable">
+      <thead>
+      <tr>
+          <th scope="col">Technique</th>
+          <th scope="col">Random Key</th>
+          <th scope="col">Key</th>
+          <th scope="col">Number of Ciphertext</th>
+          <th scope="col">Show Cipher</th>
+      </tr>
+      </thead>
+      <tbody>
+        {% for request in crypt_requests %}
+      <tr>
+          <td>{{request.technique}}</td>
+          <td>{{request.random_key}}</td>
+          <td>{{request.key}}</td>
+          <td>{{request.num_cipher}}</td>
+          <td><a href="{% url 'download_csv' request.id %}" class="btn btn-primary btn-sm" type="button" >
+            Download
+          </a></td>
+        </tr>
+        
+     
+        {% endfor %}
+      </tbody>
+  </table>
+</div>
+{% endblock content%}
+ 
+    
+   
+
+  

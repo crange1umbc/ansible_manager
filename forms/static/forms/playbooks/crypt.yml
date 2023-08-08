@@ -1,0 +1,29 @@
+---
+- name: Create Ciphertext file on remote machine
+  hosts: '{{host_name}}'
+  become: true
+  gather_facts: false
+
+  tasks:
+
+  - name: Read JSON
+    set_fact:
+        dir_list: "{{ cipher_list | from_json }}"
+  
+  - name: Create directory if doesn't exist
+    ansible.builtin.file:
+        path: "{{ '/Cryptography/ciphertext.txt' | dirname }}"
+        state: directory
+    
+  - name: Create txt file
+    ansible.builtin.blockinfile:
+        path: '/Cryptography/ciphertext.txt'
+        create: yes
+        block: "{{item.split(',')[1]}}"
+    delegate_to: "{{hostname}}"
+    when: inventory_hostname == hostname
+    vars:
+        hostname: "{{item.split(',')[0]}}"
+    loop: "{{cipher_list}}"
+    loop_control:
+        loop_var: item
