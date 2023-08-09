@@ -38,7 +38,7 @@
                 right:0;
                 bottom:0;
                 width:100%;
-                background:rgba(0,0,0,0.75) url('% static "forms/Loading_icon.gif" %') no-repeat center center;
+                background:rgba(0,0,0,0.75) url('{% static "/forms/loading.gif" %}') no-repeat center center;
                 z-index:1000;
 
             }
@@ -64,9 +64,9 @@
                         <li class="nav-item">
                             <a href="{% url 'login' %}" class="nav-link">Login</a>
                         </li>
-                        <li class="nav-item">
+                        <!-- <li class="nav-item">
                             <a href="{% url 'register' %}" class="nav-link">Register</a>
-                        </li>
+                        </li> -->
                         {% endif %}
                     </ul>
                 </div>

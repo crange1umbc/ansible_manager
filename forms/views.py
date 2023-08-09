@@ -73,7 +73,7 @@ def new_vm(request):
         run(playbook=playbook_path,**options)
         
         # return redirect('dashboard')
-        return JsonResponse({'message':"VM's created"})
+        return JsonResponse({'success':True,'message':"VM's created"})
         
     else:
         return render(request,'forms/new_vm_form.html')
@@ -102,9 +102,9 @@ def power_on(request):
         }
         result=run(playbook=playbook_path,**options)
         if result.rc==0:
-            return JsonResponse({'message':"Powered on"})
+            return JsonResponse({'success':True,'message':"Powered on"})
         else:
-            return JsonResponse({'message':"Power on failed"})
+            return JsonResponse({'success':False,'message':"Power on failed"})
     else:
         return render(request,'forms/power_on.html')
 
@@ -128,9 +128,9 @@ def power_off(request):
         }
         result=run(playbook=playbook_path,**options)
         if result.rc==0:
-            return JsonResponse({'message':"Powered off"})
+            return JsonResponse({'success':True,'message':"Powered off"})
         else:
-            return JsonResponse({'message':"Power off failed"})
+            return JsonResponse({'success':False,'message':"Power off failed"})
     else:
         return render(request,'forms/power_off.html')
 
@@ -154,9 +154,9 @@ def restart(request):
         }
         result=run(playbook=playbook_path,**options)
         if result.rc==0:
-            return JsonResponse({'message':"Restarted"})
+            return JsonResponse({'success':True,'message':"Restarted"})
         else:
-            return JsonResponse({'message':"Restart failed"})
+            return JsonResponse({'success':False,'message':"Restart failed"})
         
     else:
         return render(request,'forms/restart.html')
@@ -179,7 +179,7 @@ def user_add(request):
             add_users=list(filter(None,add_file.split('\n')))
             add_users_list=json.dumps(add_users)
         else:
-            return JsonResponse({'message':"Users don't exist"})
+            return JsonResponse({'success':False,'message':"Users don't exist"})
 
         playbook_path=static+'/forms/playbooks/user_add.yml'
         extra_vars={
@@ -188,9 +188,9 @@ def user_add(request):
         }
         result=ansible_run(playbook_path,extra_vars)
         if result.rc==0:
-            return JsonResponse({'message':"User's added successfully"})
+            return JsonResponse({'success':True,'message':"User's added successfully"})
         else:
-            return JsonResponse({'message':"Add Users Failed"})
+            return JsonResponse({'success':False,'message':"Add Users Failed"})
 
     else:
         return render(request,'forms/user_add.html')
@@ -212,11 +212,11 @@ def user_remove(request):
             }
             result=ansible_run(playbook_path,extra_vars)
             if result.rc==0:
-                return JsonResponse({'message':"User's removed successfully"})
+                return JsonResponse({'success':True,'message':"User's removed successfully"})
             else:
-                return JsonResponse({'message':"Remove Users Failed"})
+                return JsonResponse({'success':False,'message':"Remove Users Failed"})
         else:
-            return JsonResponse({'message':"Users Don't exist"})
+            return JsonResponse({'success':False,'message':"Users Don't exist"})
     else:
         return render(request,'forms/user_remove.html')
 
@@ -237,11 +237,11 @@ def create_dir(request):
             }
             result=ansible_run(playbook_path,extra_vars)
             if result.rc==0:
-                return JsonResponse({'message':"Directory Created successfully"})
+                return JsonResponse({'success':True,'message':"Directory Created successfully"})
             else:
-                return JsonResponse({'message':"Directory Creation Failed"})
+                return JsonResponse({'success':False,'message':"Directory Creation Failed"})
         else:
-            return JsonResponse({'message':"Directory not provided"})
+            return JsonResponse({'success':False,'message':"Directory not provided"})
     else:
         return render(request,'forms/create_dir.html')
 
@@ -262,11 +262,11 @@ def delete_dir(request):
             }
             result=ansible_run(playbook_path,extra_vars)
             if result.rc==0:
-                return JsonResponse({'message':"Directory Deleted successfully"})
+                return JsonResponse({'success':True,'message':"Directory Deleted successfully"})
             else:
-                return JsonResponse({'message':"Directory Deletion Failed"})
+                return JsonResponse({'success':False,'message':"Directory Deletion Failed"})
         else:
-            return JsonResponse({'message':"Directory not provided"})
+            return JsonResponse({'success':False,'message':"Directory not provided"})
             
     else:
         return render(request,'forms/delete_dir.html')
@@ -305,17 +305,17 @@ def crypt(request):
         key=request.POST.get('key')
         if random_key=='no':
             if key=='':
-                return JsonResponse({'message':"Key not provided. If you don't want to give key, select random key"})
+                return JsonResponse({'success':False,'message':"Key not provided. If you don't want to give key, select random key"})
         default=request.POST.get('default')
         num=request.POST.get('num_cipher')
         if default=='no':
             if request.POST.get('plain')=='':
-                return JsonResponse({'message':"Plaintext not provided. If you don't want to give plaintext, select default plaintext"})
+                return JsonResponse({'success':False,'message':"Plaintext not provided. If you don't want to give plaintext, select default plaintext"})
             else:
                 plaintexts=[r for r in request.POST.get('plain').split('\n\n')]
         else:
             if num=='':
-                return JsonResponse({'message':"Number of ciphertext not given"})
+                return JsonResponse({'success':False,'message':"Number of ciphertext not given"})
             file_path=static+"/forms/default_Plain.txt"
             plaintexts=get_plaintexts_from_file(file_path,int(num))
         ip_addr=request.POST.get('ip_addr')
@@ -327,7 +327,7 @@ def crypt(request):
             if key.isdigit():
                 ciphertexts,keys=rotation(plaintexts,key)
             else:
-                return JsonResponse({'message':"Key for rotation cipher should be a number"})
+                return JsonResponse({'success':False,'message':"Key for rotation cipher should be a number"})
         elif technique=='ceaser':
             ciphertexts,keys=ceaser(plaintexts)
         elif technique=='transposition':
@@ -342,7 +342,7 @@ def crypt(request):
             host_name=[f'crange1@{r.strip()}' for r in ip_addr.split(',')]
             
             if len(host_name)!=len(ciphertexts):
-                return JsonResponse({'message':"Number of ip_address is incorrect, it should be same as number of plaintexts"})
+                return JsonResponse({'success':False,'message':"Number of ip_address is incorrect, it should be same as number of plaintexts"})
 
             cipher=[]
             for i in range(len(host_name)):
@@ -359,14 +359,14 @@ def crypt(request):
                 for i in range(len(ciphertexts)):
                     text=CryptText(cryptreq=crypt_request,plaintext=plaintexts[i],ciphertext=ciphertexts[i],key=keys[i],ip_addr=ip_address[i])
                     text.save()
-                return JsonResponse({'message':"Ciphertexts copied successfully"})
+                return JsonResponse({'success':True,'message':"Ciphertexts copied successfully"})
             else:
-                return JsonResponse({'message':"Ciphertexts copy failed"})
+                return JsonResponse({'success':False,'message':"Ciphertexts copy failed"})
         else:
             for i in range(len(ciphertexts)):
                 text=CryptText(cryptreq=crypt_request,plaintext=plaintexts[i],ciphertext=ciphertexts[i],key=keys[i])
                 text.save()
-            return JsonResponse({'message':"Ciphertexts creates successfully"})
+            return JsonResponse({'success':True,'message':"Ciphertexts created successfully"})
 
     else:
         return render(request,'forms/crypt.html')

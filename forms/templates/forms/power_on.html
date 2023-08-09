@@ -44,9 +44,14 @@
                 type:'POST',
                 
             }).done(function(response){
-                spinner.hide();
+                $('#loader').hide();
                 alert(response.message);
-                window.location.reload();
+                if (response.success){
+                    window.location.href='{% url "dashboard" %}';
+                }
+                else{
+                    window.location.reload();
+                }
 
             });
         });

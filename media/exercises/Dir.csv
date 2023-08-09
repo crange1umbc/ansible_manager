@@ -1,4 +1,0 @@
-Timestamp,Email Address,Do you want to perform the tasks on same machines?,Machines for Directory Creation/Deletion,Select one:,Give comma separated list of directory paths,"If creation of directory, give comma separated list for permission of directories."
-7/18/2023 11:47:18,bpoyeka1@umbc.edu,Yes,"130.85.121.26,130.85.121.27,133.228.78.3",Create Directory,"/home/user/dir, /home/dir2","0755,0755"
-7/18/2023 11:47:49,bpoyeka1@umbc.edu,Yes,130.85.121.26,Create Directory,/home/dir3,
-7/18/2023 11:49:23,bpoyeka1@umbc.edu,Yes,"130.85.121.26,130.85.121.27,133.228.78.3",Delete Directory,"/home/dir2, /home/dir3, /home/dir1",
