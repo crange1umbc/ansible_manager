@@ -85,9 +85,9 @@
       <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
         {% for exercise in exercises %}
         <div class="form-section">
-          <div class="form-link">
-            <div>{{exercise.name}}</div>
-	    <div>{{exercise.description}}</div>
+          <div class="form-link ex-info">
+            <div class="ex-name">{{exercise.name}}</div>
+	          <div class="ex-desc">{{exercise.description}}</div>
           </div>
           <a class="btn btn-primary form-button" href="{% url 'open-exercise' exercise.id %}">Open</a>
         </div>
