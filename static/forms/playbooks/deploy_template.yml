@@ -33,8 +33,10 @@
         wait_for_ip_address: yes
         networks:
           - name: "{{vm_network}}"
-            connected: yes
             dhcp: yes
+            start_connected: yes
+            connected: yes
+            
       
       loop: "{{range(1,num_vm+1)}}"
       loop_control:

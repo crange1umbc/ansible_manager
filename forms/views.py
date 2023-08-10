@@ -70,7 +70,11 @@ def new_vm(request):
             'extravars':extra_vars,
             'cmdline':vault_password_cmd,
         }
-        run(playbook=playbook_path,**options)
+        result=run(playbook=playbook_path,**options)
+        # print("\n\n\n------------------After execution--------------------")
+        # for event in result.events:
+        #     # print(event)
+        #     print(event[0])
         
         # return redirect('dashboard')
         return JsonResponse({'success':True,'message':"VM's created"})

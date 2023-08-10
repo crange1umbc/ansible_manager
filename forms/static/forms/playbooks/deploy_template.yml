@@ -24,7 +24,7 @@
         username: "{{vcenter_username}}"
         password: "{{vcenter_password}}"
         validate_certs: "{{vcenter_validate_certs}}"
-        datacenter: "{{vcenter_datacenter}}"
+        #datacenter: "{{vcenter_datacenter}}"
         #cluster: "{{vcenter_cluster}}"
         name: "{{create_vm_name}}-{{'{:02d}'.format(item)}}"
         folder: "{{create_folder_name}}"
@@ -33,8 +33,10 @@
         wait_for_ip_address: yes
         networks:
           - name: "{{vm_network}}"
-            connected: yes
             dhcp: yes
+            start_connected: yes
+            connected: yes
+            
       
       loop: "{{range(1,num_vm+1)}}"
       loop_control:
