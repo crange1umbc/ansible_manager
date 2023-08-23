@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns=[
     path('',views.dashboard,name='dashboard'),
-    path('launch_vm_request',views.launch_vm_request,name='launch_vm'),
+    path('launch_vm_request',views.launch_vm_request,name='vm_request'),
     path('launch_vm_request/new_vm',views.new_vm, name='new_vm'),
     path('manage_vm/power_on',views.power_on, name='power_on'),
     path('manage_vm/power_off',views.power_off, name='power_off'),

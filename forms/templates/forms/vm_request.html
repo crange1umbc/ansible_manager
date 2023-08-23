@@ -1,37 +1,40 @@
 {% extends "forms/base.html" %}
 {% block content %}  
-<h1>Launch VM Requests</h1>
+<h1>VM Requests</h1>
 <div class="block-button"><a href="{% url 'new_vm' %}" class="btn btn-primary btn-lg btn-block">New VM Request</a>  
 </div>
 <div class='table-responsive'>
   <table class="table table-striped mytable">
       <thead>
       <tr>
-          <th scope="col">#</th>
-          <th scope="col">First</th>
-          <th scope="col">Last</th>
-          <th scope="col">Handle</th>
+          <th scope="col">Course Number</th>
+          <th scope="col">Course Name</th>
+          <th scope="col">Instructor Name</th>
+          <th scope="col">TA Name</th>
+          <th scope="col">Semester</th>
+          <th scope="col">Year</th>
+          <th scope="col">Os</th>
+          <th scope="col">IP_address</th>
       </tr>
       </thead>
       <tbody>
+        {% for request in vm_requests %}
       <tr>
-          <th scope="row">1</th>
-          <td>Mark</td>
-          <td>Otto</td>
-          <td>@mdo</td>
-      </tr>
-      <tr>
-          <th scope="row">2</th>
-          <td>Jacob</td>
-          <td>Thornton</td>
-          <td>@fat</td>
-      </tr>
-      <tr>
-          <th scope="row">3</th>
-          <td>Larry</td>
-          <td>the Bird</td>
-          <td>@twitter</td>
-      </tr>
+          <td>{{request.course_number}}</td>
+          <td>{{request.course_name}}</td>
+          <td>{{request.instructor_name}}</td>
+          <td>{{request.ta_name}}</td>
+          <td>{{request.semester}}</td>
+          <td>{{request.year}}</td>
+          <td>{{request.os}}</td>
+          <td>{% for vm in request.vm_set.all %}
+            {{vm.ip_addr}}{% if not forloop.last%},{% endif%}
+            {% endfor%}
+          </td>
+        </tr>
+        
+     
+        {% endfor %}
       </tbody>
   </table>
 </div>

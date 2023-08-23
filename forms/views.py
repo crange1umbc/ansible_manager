@@ -13,23 +13,21 @@ from django.contrib.auth.decorators import login_required
 from .models import Exercise,VM,VMRequest,CryptRequest,CryptText
 from dotenv import load_dotenv
 import csv
+import yaml
 
 load_dotenv()
 # Create your views here.
 
-IP_NAME={
-        '130.85.121.26':'bhar-ub22',
-        '130.85.121.27':'bhar-kali',
-        '133.228.78.3':'bhar-ub20',
-    }
-VM_TEMPLATES={
-   'kali':'CyberRange/vm/CRCSEE/Template/Template-Kali-crg',
-   'ub20':'CyberRange/vm/CRCSEE/Template/template-ub20',
-   'ub22':'CyberRange/vm/bhargavi/ub-22-template',
-}
-
 become_password='Crcsee2#'
 static=settings.STATIC_ROOT
+
+VM_TEMPLATES={
+   'kali':'CyberRange/vm/bhargavi/kali-22-temp',
+   'ub20':'CyberRange/vm/bhargavi/ub-20-temp',
+   'ub22':'CyberRange/vm/bhargavi/ub-22-temp',
+}
+
+
 inventory_path=static+'/forms/playbooks/inventory'
 vault_password_cmd='--vault-password-file '+static+'/forms/playbooks/pass.txt'
 ssh_key_path=static+'/forms/playbooks/ansible'
@@ -45,40 +43,198 @@ def dashboard(request):
 
 @login_required
 def launch_vm_request(request):
-    return render(request,'forms/vm_request.html')
+    user=request.user
+    vm_requests=VMRequest.objects.filter(user=user)
+    return render(request,'forms/vm_request.html',{'vm_requests':vm_requests})
+
+    
+@login_required
+def vm_csv(request, request_id):
+    response=HttpResponse(content_type='text_csv')
+    response['Content-Disposition']='attachment; filename="ciphertexts.csv"'
+
+    writer=csv.writer(response)
+    writer.writerow(['Plaintext','Ciphertext','Key','IP Address'])
+
+    ciphertexts=CryptText.objects.filter(cryptreq=request_id)
+
+    for cipertext in ciphertexts:
+        writer.writerow([cipertext.plaintext,cipertext.ciphertext,cipertext.key,cipertext.ip_addr])
+    
+    return response
 
 @login_required
 def new_vm(request):
     if request.method=='POST':
-        playbook_path=static+'/forms/playbooks/deploy_template.yml'
+    
         course_number=request.POST['course_number']
-        prof_name=request.POST['instructor_name']
+        course_name=request.POST['course_name']
+        instructor_name=request.POST['instructor_name']
+        desc=request.POST['description']
+        ta_name=request.POST['ta_name']
+        sem=request.POST['sem']
+        year=request.POST['year']
         os=request.POST['os']
+        cpu=request.POST['num_cpu']
+        ram=request.POST['ram']
+        ram=int(ram)*1024
+        extra_ram=request.POST['extra_ram']
+        hard_disk=request.POST['conf']
         num_vm=request.POST['num_vm']
-        folder_name=course_number+prof_name.split(' ')[0]
-        vm_name=course_number+prof_name.split(' ')[0]+'-'+os
-        template=VM_TEMPLATES[os]
+        
+        user=request.user
 
+        vm_req=VMRequest(user=user,course_number=course_number,course_name=course_name,instructor_name=instructor_name, ta_name=ta_name,description=desc, semester=sem, year=year, os=os, cpu_count=cpu, ram=ram, ram_reason=extra_ram, hard_disk=hard_disk, num_vm=num_vm)
+        vm_req.save()
+        req_id=vm_req.id
+
+        folder_name=course_number+instructor_name.split(' ')[0]
+        template=VM_TEMPLATES[os]
+        assigned_ip=VM.objects.values_list('ip_addr', flat=True)
+        assigned_ip=list(assigned_ip)
+
+        vm_name=[]
+        for i in range(int(num_vm)):
+            vm_name.append(course_number+instructor_name.split(' ')[0]+'-'+str(req_id)+os+str(i))
+
+        if os=='ub22':
+            playbook_path=static+'/forms/playbooks/deploy_template.yml'
+            ip_address=[]
+            ip_count=0
+
+            net2_ip=[]
+
+            for i in range(192,224):
+                ip=f"130.85.121.{i}"
+                if ip not in assigned_ip:
+                    ip_address.append(ip)
+                    ip_count+=1
+                    if ip_count==int(num_vm):
+                        break
+
+            ip_count=0
+            done=False
+            for i in range(68,72):
+                for j in range(2,255,3):
+                    if done:
+                        break
+                    ip=f"133.228.{i}.{j}"
+                    if ip not in assigned_ip:
+                        net2_ip.append(ip)
+                        ip_count+=1
+                        if ip_count==int(num_vm):
+                            done=True
+                            break
+
+            if len(ip_address)<int(num_vm) or len(net2_ip)<int(num_vm):
+                return JsonResponse({'success':False,'message':"Don't have enough ip_address to allocate"})
+            
+            vm_list=[]
+            for i in range(int(num_vm)):
+                vm_list.append(vm_name[i]+','+ip_address[i]+','+net2_ip[i])
+
+        elif os=='kali':
+            playbook_path=static+'/forms/playbooks/deploy_template_jump.yml'
+            
+            ip_count=0
+            net2_ip=[]
+
+            ip_count=0
+            done=False
+            for i in range(68,72):
+                for j in range(1,255,3):
+                    if done:
+                        break
+                    ip=f"133.228.{i}.{j}"
+                    if ip not in assigned_ip:
+                        net2_ip.append(ip)
+                        ip_count+=1
+                        if ip_count==int(num_vm):
+                            done=True
+                            break
+                    
+            if len(net2_ip)<int(num_vm):
+                return JsonResponse({'success':False,'message':"Don't have enough ip_address to allocate"})
+            
+            vm_list=[]
+            for i in range(int(num_vm)):
+                vm_list.append(vm_name[i]+','+ net2_ip[i])
+        
+        else:
+            playbook_path=static+'/forms/playbooks/deploy_template_jump.yml'
+            
+            ip_count=0
+            net2_ip=[]
+
+            ip_count=0
+            done=False
+            for i in range(68,72):
+                for j in range(3,255,3):
+                    if done:
+                        break
+                    ip=f"133.228.{i}.{j}"
+                    if ip not in assigned_ip:
+                        net2_ip.append(ip)
+                        ip_count+=1
+                        if ip_count==int(num_vm):
+                            done=True
+                            break                    
+            
+            if len(net2_ip)<int(num_vm):
+                return JsonResponse({'success':False,'message':"Don't have enough ip_address to allocate"})
+            
+            vm_list=[]
+            for i in range(int(num_vm)):
+                vm_list.append(vm_name[i]+','+net2_ip[i])
+        
+        print(vm_list)
+        vm_list=json.dumps(vm_list)
 
         extra_vars={
             'create_folder_name':folder_name,
             'create_vm_name':vm_name,
             'create_template':template,
-            'num_vm':int(num_vm)
+            'num_vm':int(num_vm),
+            'cpu': int(cpu),
+            'ram':int(ram),
+            'vm_list':vm_list,
         }
         options={
             'extravars':extra_vars,
             'cmdline':vault_password_cmd,
+            'verbosity': 4
         }
         result=run(playbook=playbook_path,**options)
-        # print("\n\n\n------------------After execution--------------------")
-        # for event in result.events:
-        #     # print(event)
-        #     print(event[0])
+        if result.rc==0:
+            if os=="ub22":
+                for i in range(int(num_vm)):
+                    vms=VM(vmrequest=vm_req,ip_addr=ip_address[i],vm_name=vm_name[i],os=os,template=template)
+                    vms.save()
+                
+                with open(inventory_path, "r") as inventory_file:
+                    existing=inventory_file.read()
+            
+                ip_address=[f"crange1@{ip}" for ip in ip_address]
+
+                new_ip="\n".join(ip_address)+"\n"+existing
+            
+                with open(inventory_path, "w") as inventory_file:
+                    inventory_file.write(new_ip)
+            
+            for i in range(int(num_vm)):
+                vms=VM(vmrequest=vm_req,ip_addr=net2_ip[i],vm_name=vm_name[i],os=os,template=template)
+                vms.save()
         
-        # return redirect('dashboard')
-        return JsonResponse({'success':True,'message':"VM's created"})
+            ip_address=[f"crange1@{ip}" for ip in net2_ip]
+
+            new_ip="\n".join(ip_address)+"\n"
         
+            with open(inventory_path, "a") as inventory_file:
+                inventory_file.write(new_ip)
+            
+            return JsonResponse({'success':True,'message':"VM's created"})
+        else:
+            return JsonResponse({'success':False,'message':"Something went wrong. VM's couldn't be created"})
     else:
         return render(request,'forms/new_vm_form.html')
 
@@ -87,6 +243,12 @@ def power_on(request):
     
     if request.method=='POST':
         
+        vm_objects=VM.objects.all()
+        IP_NAME={}
+
+        for vm in vm_objects:
+            IP_NAME[vm.ip_addr]=vm.vm_name
+
         playbook_path=static+'/forms/playbooks/power_server.yml'
         ip_addr=[IP_NAME.get(ip.strip()) for ip in request.POST.get('ip_addr').split(',')]
         if None in ip_addr:
@@ -115,10 +277,20 @@ def power_on(request):
 @login_required
 def power_off(request):
     if request.method=='POST':
+        vm_objects=VM.objects.all()
+        IP_NAME={}
+
+        for vm in vm_objects:
+            print(vm.ip_addr)
+            IP_NAME[vm.ip_addr]=vm.vm_name
+
+        print(IP_NAME)
+
         ip_addr=[IP_NAME.get(ip.strip()) for ip in request.POST.get('ip_addr').split(',')]
         if None in ip_addr:
             return JsonResponse({'message':"VM Not Found"})
         machine_list=json.dumps(ip_addr)
+
         playbook_path=static+'/forms/playbooks/power_off.yml'
         extra_vars={
             'machine_list':machine_list
@@ -141,10 +313,17 @@ def power_off(request):
 @login_required
 def restart(request):
     if request.method=='POST':
+        vm_objects=VM.objects.all()
+        IP_NAME={}
+
+        for vm in vm_objects:
+            IP_NAME[vm.ip_addr]=vm.vm_name
+
         ip_addr=[IP_NAME.get(ip.strip()) for ip in request.POST.get('ip_addr').split(',')]
         if None in ip_addr:
             return JsonResponse({'message':"VM Not Found"})
         machine_list=json.dumps(ip_addr)
+
         playbook_path=static+'/forms/playbooks/restart.yml'
         extra_vars={
             'machine_list':machine_list
@@ -168,6 +347,7 @@ def restart(request):
 @login_required
 def user_add(request):
     if request.method=='POST':
+
         ip_addr=[ip.strip() for ip in request.POST.get('ip_addr').split(',')]
         if None in ip_addr:
             return JsonResponse({'message':"VM Not Found"})
@@ -617,6 +797,7 @@ def crypt_request(request):
     user=request.user
     crypt_requests=CryptRequest.objects.filter(user=user)
     return render(request,'forms/crypt_request.html',{'crypt_requests':crypt_requests})
+
 
 @login_required
 def download_csv(request, request_id):

@@ -29,7 +29,7 @@ pre_delete.connect(delete_pdf_file,sender=Exercise)
 
 class VMRequest(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE)
-    course_number=models.CharField(max_length=200)
+    course_number=models.CharField(max_length=200, null=True)
     course_name=models.CharField(max_length=200)
     instructor_name=models.CharField(max_length=200)
     ta_name=models.CharField(max_length=200)
@@ -37,28 +37,25 @@ class VMRequest(models.Model):
     semester=models.CharField(max_length=200)
     year=models.PositiveSmallIntegerField()
     os=models.CharField(max_length=200)
-    cpu_count=models.PositiveSmallIntegerField()
-    ram=models.PositiveSmallIntegerField()
-    ram_reason=models.TextField()
-    hard_disk=models.PositiveSmallIntegerField()
-    disk_reason=models.TextField()
+    cpu_count=models.PositiveSmallIntegerField(null=True)
+    ram=models.PositiveSmallIntegerField(null=True)
+    ram_reason=models.TextField(null=True)
+    hard_disk=models.PositiveSmallIntegerField(null=True)
+    disk_reason=models.TextField(null=True)
     num_vm=models.PositiveSmallIntegerField()
-    start_date=models.CharField(max_length=200)
-    end_date=models.CharField(max_length=200)
-    self_sudo=models.CharField(max_length=200)
-    vm_users=models.TextField()
-    vm_user_file=models.FileField(upload_to='vm_users/')
-    status=models.CharField(max_length=200)
-
-    def __str__(self):
-        return course_number+'_'+instructor_name+'_'+semester+year
+    start_date=models.CharField(max_length=200, null=True)
+    end_date=models.CharField(max_length=200, null=True)
+    self_sudo=models.CharField(max_length=200, null=True)
+    vm_users=models.TextField(null=True)
+    vm_user_file=models.FileField(upload_to='vm_users/', null=True)
+    status=models.CharField(max_length=200, null=True)
 
 class VM(models.Model):
     vmrequest=models.ForeignKey(VMRequest,on_delete=models.CASCADE, null=True,blank=True)
     ip_addr=models.CharField(max_length=200)
     vm_name=models.CharField(max_length=200)
     os=models.CharField(max_length=200)
-    template=models.CharField(max_length=200)
+    template=models.CharField(max_length=200, null=True)
 
 class CryptRequest(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE)

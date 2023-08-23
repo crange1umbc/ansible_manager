@@ -7,6 +7,11 @@
   vars_files:
     - secret.yml
   tasks:
+
+    - name: Read JSON
+      set_fact:
+          vm_list: "{{ vm_list | from_json }}"
+
     - name: create VM folder
       vcenter_folder:
         hostname: "{{ vcenter_hostname }}"
@@ -24,29 +29,40 @@
         username: "{{vcenter_username}}"
         password: "{{vcenter_password}}"
         validate_certs: "{{vcenter_validate_certs}}"
-        #datacenter: "{{vcenter_datacenter}}"
+        datacenter: "{{vcenter_datacenter}}"
         #cluster: "{{vcenter_cluster}}"
-        name: "{{create_vm_name}}-{{'{:02d}'.format(item)}}"
+        name: "{{item.split(',')[0]}}"
         folder: "{{create_folder_name}}"
         template: "{{create_template}}"
         state: "{{vm_state}}"
-        wait_for_ip_address: yes
+        hardware:
+          memory_mb: "{{ram}}"
+          num_cpus: "{{cpu}}"
         networks:
           - name: "{{vm_network}}"
-            dhcp: yes
-            start_connected: yes
-            connected: yes
-            
+            ip: "{{item.split(',')[1]}}"
+            netmask: "255.255.255.0"
+            gateway: "130.85.121.1"
       
-      loop: "{{range(1,num_vm+1)}}"
+      loop: "{{vm_list}}"
       loop_control:
         loop_var: item
       register: vm_deploy_results
      
-    - name: Display VM IPs
-      debug: 
-        msg: "{{item.instance.ipv4}}"
-      loop: "{{vm_deploy_results.results}}"
+    # - name: Change CPU and RAM
+    #   community.vmware.vmware_vm_shell:
+    #     hostname: "{{vcenter_hostname}}"
+    #     username: "{{vcenter_username}}"
+    #     password: "{{vcenter_password}}"
+    #     validate_certs: "{{vcenter_validate_certs}}"
+    #     cluster_name: "{{vcenter_cluster}}"
+    #     vm_name: "{{create_vm_name}}"
+
+    #     hardware:
+    #       memory_mb: 4096
+    #       num_cpus: 4
+
+    
         
    
       

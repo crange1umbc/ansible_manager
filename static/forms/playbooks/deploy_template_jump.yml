@@ -40,12 +40,11 @@
           num_cpus: "{{cpu}}"
         networks:
           - name: "{{vm_network}}"
-            ip: "{{item.split(',')[1]}}"
-            netmask: "255.255.255.0"
-            gateway: "130.85.121.1"
-
+            start_connected: false
+            connected: false
+            
           - name: "VLAN4093"
-            ip: "{{item.split(',')[2]}}"
+            ip: "{{item.split(',')[1]}}"
             netmask: "255.255.192.0"
       
       loop: "{{vm_list}}"
@@ -53,7 +52,7 @@
         loop_var: item
       register: vm_deploy_results
      
-
+   
     
         
    
