@@ -79,12 +79,12 @@
                         <label for="extra_disk">If more than 128 GB Hard Disk required, please justify!</label>
                         <textarea class="form-control" id="extra_disk" name="extra_disk"></textarea>
                     </div> --> 
-                    <div class="form-group col-md-12">
+                    <div class="form-group col-md-12" id="hd">
                         <label for="conf">Select Hard-disk in GB</label>
                         <select class='form-select' name="conf" id="conf">
-                            <option value="40" selected>40GB Hard Disk</option>
-                            <option value="100">100GB Hard Disk</option>
-                            <option value="1024">1024GB Hard Disk</option>
+                            <option value="16" selected>16 GB Hard Disk</option>
+                            <option value="40">40 GB Hard Disk</option>
+                            <option value="100">100 GB Hard Disk</option>
                             <!-- <option value="win7">Windows 7</option>
                             <option value="win8">Windows 8</option> -->
                         </select>
@@ -142,7 +142,7 @@
 <script>
 
     const source=document.getElementById('os')
-    const target=document.getElementById('conf')
+    const target=document.getElementById('hd')
 
     source.addEventListener('change',function(){
         if (source.value!='ub22'){
@@ -170,7 +170,7 @@
                 $('#loader').hide();
                 alert(response.message);
                 if (response.success){
-                    window.location.href='{% url "dashboard" %}';
+                    window.location.href='{% url "vm_request" %}';
                 }
                 else{
                     window.location.reload();

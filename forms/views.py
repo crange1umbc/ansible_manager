@@ -24,7 +24,9 @@ static=settings.STATIC_ROOT
 VM_TEMPLATES={
    'kali':'CyberRange/vm/bhargavi/kali-22-temp',
    'ub20':'CyberRange/vm/bhargavi/ub-20-temp',
-   'ub22':'CyberRange/vm/bhargavi/ub-22-temp',
+   'ub22-16':'CyberRange/vm/bhargavi/ub-22-16-temp',
+   'ub22-40':'CyberRange/vm/bhargavi/ub-22-40-temp',
+   'ub22-100':'CyberRange/vm/bhargavi/ub-22-100-temp',
 }
 
 
@@ -89,15 +91,16 @@ def new_vm(request):
         req_id=vm_req.id
 
         folder_name=course_number+instructor_name.split(' ')[0]
-        template=VM_TEMPLATES[os]
+        
         assigned_ip=VM.objects.values_list('ip_addr', flat=True)
         assigned_ip=list(assigned_ip)
 
         vm_name=[]
         for i in range(int(num_vm)):
-            vm_name.append(course_number+instructor_name.split(' ')[0]+'-'+str(req_id)+os+str(i))
+            vm_name.append(course_number+instructor_name.split(' ')[0]+'-'+str(req_id)+os+'-'+str(i+1))
 
         if os=='ub22':
+            template=VM_TEMPLATES[f'{os}-{hard_disk}']
             playbook_path=static+'/forms/playbooks/deploy_template.yml'
             ip_address=[]
             ip_count=0
@@ -134,6 +137,7 @@ def new_vm(request):
                 vm_list.append(vm_name[i]+','+ip_address[i]+','+net2_ip[i])
 
         elif os=='kali':
+            template=VM_TEMPLATES[os]
             playbook_path=static+'/forms/playbooks/deploy_template_jump.yml'
             
             ip_count=0
@@ -161,6 +165,7 @@ def new_vm(request):
                 vm_list.append(vm_name[i]+','+ net2_ip[i])
         
         else:
+            template=VM_TEMPLATES[os]
             playbook_path=static+'/forms/playbooks/deploy_template_jump.yml'
             
             ip_count=0
