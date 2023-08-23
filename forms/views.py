@@ -207,7 +207,7 @@ def new_vm(request):
         options={
             'extravars':extra_vars,
             'cmdline':vault_password_cmd,
-            'verbosity': 4
+            
         }
         result=run(playbook=playbook_path,**options)
         if result.rc==0:
