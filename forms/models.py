@@ -54,6 +54,7 @@ class VM(models.Model):
     vmrequest=models.ForeignKey(VMRequest,on_delete=models.CASCADE, null=True,blank=True)
     ip_addr=models.CharField(max_length=200)
     vm_name=models.CharField(max_length=200)
+    folder_name=models.CharField(max_length=200, null=True)
     os=models.CharField(max_length=200)
     template=models.CharField(max_length=200, null=True)
 

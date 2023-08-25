@@ -207,7 +207,7 @@ def new_vm(request):
         if result.rc==0:
             if os=="ub22":
                 for i in range(int(num_vm)):
-                    vms=VM(vmrequest=vm_req,ip_addr=ip_address[i],vm_name=vm_name[i],os=os,template=template)
+                    vms=VM(vmrequest=vm_req,ip_addr=ip_address[i],vm_name=vm_name[i],folder_name=folder_name,os=os,template=template)
                     vms.save()
                 
                 with open(inventory_path, "r") as inventory_file:
@@ -221,7 +221,7 @@ def new_vm(request):
                     inventory_file.write(new_ip)
             
             for i in range(int(num_vm)):
-                vms=VM(vmrequest=vm_req,ip_addr=net2_ip[i],vm_name=vm_name[i],os=os,template=template)
+                vms=VM(vmrequest=vm_req,ip_addr=net2_ip[i],vm_name=vm_name[i],folder_name=folder_name,os=os,template=template)
                 vms.save()
         
             ip_address=[f"crange1@{ip}" for ip in net2_ip]
@@ -241,20 +241,30 @@ def new_vm(request):
 def power_on(request):
     
     if request.method=='POST':
-        
-        vm_objects=VM.objects.all()
-        IP_NAME={}
-
-        for vm in vm_objects:
-            IP_NAME[vm.ip_addr]=vm.vm_name
-
         playbook_path=static+'/forms/playbooks/power_server.yml'
-        ip_addr=[IP_NAME.get(ip.strip()) for ip in request.POST.get('ip_addr').split(',')]
-        if None in ip_addr:
-            return JsonResponse({'message':"VM Not Found"})
+
+        if request.POST.get('ip_addr')!='':
+            vm_objects=VM.objects.all()
+            IP_NAME={}
+            folder_name={}
+            for vm in vm_objects:
+                IP_NAME[vm.ip_addr]=f'{vm.folder_name},{vm.vm_name}'
+
+            ip_addr=[IP_NAME.get(ip.strip()) for ip in request.POST.get('ip_addr').split(',')]
+            if None in ip_addr:
+                return JsonResponse({'message':"VM Not Found"})
+            
+            machine_list=json.dumps(ip_addr)
         
-        machine_list=json.dumps(ip_addr)
-        
+        elif request.POST.get('vm_name')!='':
+            vms=[vm.strip() for vm in request.POST.get('vm_name').split(',')]
+            vm_list=[]
+            for vm in vms:
+                folder,ip=vm.split('/')
+                vm_list.append(folder+','+ip)
+            
+            machine_list=json.dumps(vm_list)
+
         extra_vars={
             'machine_list':machine_list
         }
@@ -276,19 +286,27 @@ def power_on(request):
 @login_required
 def power_off(request):
     if request.method=='POST':
-        vm_objects=VM.objects.all()
-        IP_NAME={}
+        if request.POST.get('ip_addr')!='':
+            vm_objects=VM.objects.all()
+            IP_NAME={}
+            folder_name={}
+            for vm in vm_objects:
+                IP_NAME[vm.ip_addr]=f'{vm.folder_name},{vm.vm_name}'
 
-        for vm in vm_objects:
-            print(vm.ip_addr)
-            IP_NAME[vm.ip_addr]=vm.vm_name
-
-        print(IP_NAME)
-
-        ip_addr=[IP_NAME.get(ip.strip()) for ip in request.POST.get('ip_addr').split(',')]
-        if None in ip_addr:
-            return JsonResponse({'message':"VM Not Found"})
-        machine_list=json.dumps(ip_addr)
+            ip_addr=[IP_NAME.get(ip.strip()) for ip in request.POST.get('ip_addr').split(',')]
+            if None in ip_addr:
+                return JsonResponse({'message':"VM Not Found"})
+            
+            machine_list=json.dumps(ip_addr)
+        
+        elif request.POST.get('vm_name')!='':
+            vms=[vm.strip() for vm in request.POST.get('vm_name').split(',')]
+            vm_list=[]
+            for vm in vms:
+                folder,ip=vm.split('/')
+                vm_list.append(folder+','+ip)
+            
+            machine_list=json.dumps(vm_list)
 
         playbook_path=static+'/forms/playbooks/power_off.yml'
         extra_vars={
@@ -312,16 +330,27 @@ def power_off(request):
 @login_required
 def restart(request):
     if request.method=='POST':
-        vm_objects=VM.objects.all()
-        IP_NAME={}
+        if request.POST.get('ip_addr')!='':
+            vm_objects=VM.objects.all()
+            IP_NAME={}
+            folder_name={}
+            for vm in vm_objects:
+                IP_NAME[vm.ip_addr]=f'{vm.folder_name},{vm.vm_name}'
 
-        for vm in vm_objects:
-            IP_NAME[vm.ip_addr]=vm.vm_name
-
-        ip_addr=[IP_NAME.get(ip.strip()) for ip in request.POST.get('ip_addr').split(',')]
-        if None in ip_addr:
-            return JsonResponse({'message':"VM Not Found"})
-        machine_list=json.dumps(ip_addr)
+            ip_addr=[IP_NAME.get(ip.strip()) for ip in request.POST.get('ip_addr').split(',')]
+            if None in ip_addr:
+                return JsonResponse({'message':"VM Not Found"})
+            
+            machine_list=json.dumps(ip_addr)
+        
+        elif request.POST.get('vm_name')!='':
+            vms=[vm.strip() for vm in request.POST.get('vm_name').split(',')]
+            vm_list=[]
+            for vm in vms:
+                folder,ip=vm.split('/')
+                vm_list.append(folder+','+ip)
+            
+            machine_list=json.dumps(vm_list)
 
         playbook_path=static+'/forms/playbooks/restart.yml'
         extra_vars={

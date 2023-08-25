@@ -28,7 +28,7 @@
           <td>{{request.year}}</td>
           <td>{{request.os}}</td>
           <td>{% for vm in request.vm_set.all %}
-            {{vm.ip_addr}}{% if not forloop.last%},{% endif%}
+            {{vm.ip_addr}}({{vm.folder_name}}/{{vm.vm_name}}){% if not forloop.last%},{% endif%}
             {% endfor%}
           </td>
         </tr>

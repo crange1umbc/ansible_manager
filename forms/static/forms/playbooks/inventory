@@ -11,5 +11,6 @@ ansible_ssh_common_args='-o ProxyJump=bhargavi@130.85.121.29 -A'
 
 [node]
 crange1@133.228.78.3
+crange1@133.228.78.1
 cmscuser@133.228.123.3
 cmscuser@133.228.123.1

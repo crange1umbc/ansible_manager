@@ -19,7 +19,8 @@
         username: "{{vcenter_username}}"
         password: "{{vcenter_password}}"
         validate_certs: "{{vcenter_validate_certs}}"
-        name: "{{item.split(',')[0]}}"
+        folder: "{{item.split(',')[0]}}"
+        name: "{{item.split(',')[1]}}"
         state: powered-on
      loop: "{{machine_list}}"
      loop_control:
