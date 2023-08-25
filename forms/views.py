@@ -23,6 +23,15 @@ static=settings.STATIC_ROOT
 
 template_path=static+'/forms/playbooks/template.yml'
 
+Vlan_3072=static+'/IP_RANGE_3072.txt'
+Vlan_4093=static+'/IP_RANGE_4093.txt'
+
+NETWORK={
+    '1':'Vlan_3072',
+    '2':'Vlan_4093',
+    '3':'Both'
+}
+
 with open(template_path,"r") as yaml_file:
     VM_TEMPLATES=yaml.safe_load(yaml_file)
 
@@ -33,6 +42,31 @@ ssh_key_path=static+'/forms/playbooks/ansible'
 with open(ssh_key_path,'r') as key_file:
     private_key_file=key_file.read()
 
+def get_available_ips(network):
+    with open(network,'r') as file:
+        ip_list=[line.strip() for line in file]
+    return ip_list
+
+def assign_ips(num_ips_to_assign,network):
+    available_ips=get_available_ips(network)
+    num_available_ips=len(available_ips)
+
+    if num_ips_to_assign>num_available_ips:
+        return []
+    
+    assigned_ips=[]
+
+    for _ in range(num_ips_to_assign):
+        random_index=random.randint(0,num_available_ips-1)
+        available_ips[random_index],available_ips[-1]=available_ips[-1],available_ips[random_index]
+        assigned_ips.append(available_ips.pop())
+        num_available_ips-=1
+
+    with open(network,"w") as file:
+        file.write('\n'.join(available_ips))
+    return assigned_ips
+
+    
 def dashboard(request):
     exercises=Exercise.objects.all()
     return render(request,'forms/main.html',{'exercises':exercises})
@@ -77,116 +111,51 @@ def new_vm(request):
         extra_ram=request.POST['extra_ram']
         hard_disk=request.POST['conf']
         num_vm=request.POST['num_vm']
-        
+        network=request.POST['network']
         user=request.user
 
-        vm_req=VMRequest(user=user,course_number=course_number,course_name=course_name,instructor_name=instructor_name, ta_name=ta_name,description=desc, semester=sem, year=year, os=os, cpu_count=cpu, ram=ram, ram_reason=extra_ram, hard_disk=hard_disk, num_vm=num_vm)
+        vm_req=VMRequest(user=user,course_number=course_number,course_name=course_name,instructor_name=instructor_name, ta_name=ta_name,description=desc, semester=sem, year=year, os=os, cpu_count=cpu, ram=ram, network=NETWORK[network], ram_reason=extra_ram, hard_disk=hard_disk, num_vm=num_vm)
         vm_req.save()
         req_id=vm_req.id
 
         folder_name=course_number+instructor_name.split(' ')[0]
-        
-        assigned_ip=VM.objects.values_list('ip_addr', flat=True)
-        assigned_ip=list(assigned_ip)
 
         vm_name=[]
         for i in range(int(num_vm)):
             vm_name.append(course_number+instructor_name.split(' ')[0]+'-'+str(req_id)+os+'-'+str(i+1))
 
-        if os=='ub22':
-            template=VM_TEMPLATES[f'{os}-{hard_disk}']
-            playbook_path=static+'/forms/playbooks/deploy_template.yml'
-            ip_address=[]
-            ip_count=0
+        template=VM_TEMPLATES[f'{os}-{network}-{hard_disk}']
 
-            net2_ip=[]
+        if network=='1':
+            playbook_path=static+'/forms/playbooks/deploy_template_1.yml'
+            ip_address=assign_ips(int(num_vm),Vlan_3072)
+            if len(ip_address)==0:
+                return JsonResponse({'success':False,'message':"Don't have enough ip_address to allocate"})
 
-            for i in range(192,224):
-                ip=f"130.85.121.{i}"
-                if ip not in assigned_ip:
-                    ip_address.append(ip)
-                    ip_count+=1
-                    if ip_count==int(num_vm):
-                        break
+            vm_list=[]
+            for i in range(int(num_vm)):
+                vm_list.append(vm_name[i]+','+ip_address[i]+','+'.'.join(ip_address[i].split('.')[:3])+'.1')
 
-            ip_count=0
-            done=False
-            for i in range(68,72):
-                for j in range(2,255,3):
-                    if done:
-                        break
-                    ip=f"133.228.{i}.{j}"
-                    if ip not in assigned_ip:
-                        net2_ip.append(ip)
-                        ip_count+=1
-                        if ip_count==int(num_vm):
-                            done=True
-                            break
-
-            if len(ip_address)<int(num_vm) or len(net2_ip)<int(num_vm):
+        elif network=='2':
+            playbook_path=static+'/forms/playbooks/deploy_template_2.yml'
+            ip_address=assign_ips(int(num_vm),Vlan_4093)
+            if len(ip_address)==0:
                 return JsonResponse({'success':False,'message':"Don't have enough ip_address to allocate"})
             
             vm_list=[]
             for i in range(int(num_vm)):
-                vm_list.append(vm_name[i]+','+ip_address[i]+','+net2_ip[i])
+                vm_list.append(vm_name[i]+','+ip_address[i])
 
-        elif os=='kali':
-            template=VM_TEMPLATES[os]
-            playbook_path=static+'/forms/playbooks/deploy_template_jump.yml'
-            
-            ip_count=0
-            net2_ip=[]
-
-            ip_count=0
-            done=False
-            for i in range(68,72):
-                for j in range(1,255,3):
-                    if done:
-                        break
-                    ip=f"133.228.{i}.{j}"
-                    if ip not in assigned_ip:
-                        net2_ip.append(ip)
-                        ip_count+=1
-                        if ip_count==int(num_vm):
-                            done=True
-                            break
-                    
-            if len(net2_ip)<int(num_vm):
-                return JsonResponse({'success':False,'message':"Don't have enough ip_address to allocate"})
-            
-            vm_list=[]
-            for i in range(int(num_vm)):
-                vm_list.append(vm_name[i]+','+ net2_ip[i])
-        
         else:
-            template=VM_TEMPLATES[os]
-            playbook_path=static+'/forms/playbooks/deploy_template_jump.yml'
-            
-            ip_count=0
-            net2_ip=[]
-
-            ip_count=0
-            done=False
-            for i in range(68,72):
-                for j in range(3,255,3):
-                    if done:
-                        break
-                    ip=f"133.228.{i}.{j}"
-                    if ip not in assigned_ip:
-                        net2_ip.append(ip)
-                        ip_count+=1
-                        if ip_count==int(num_vm):
-                            done=True
-                            break                    
-            
-            if len(net2_ip)<int(num_vm):
+            playbook_path=static+'/forms/playbooks/deploy_template_3.yml'
+            ip_address=assign_ips(int(num_vm),Vlan_3072)
+            net2_ip=assign_ips(int(num_vm),Vlan_4093)
+            if len(ip_address)==0 or len(net2_ip)==0:
                 return JsonResponse({'success':False,'message':"Don't have enough ip_address to allocate"})
-            
             vm_list=[]
             for i in range(int(num_vm)):
-                vm_list.append(vm_name[i]+','+net2_ip[i])
+                vm_list.append(vm_name[i]+','+ip_address[i]+','+'.'.join(ip_address[i].split('.')[:3])+'.1'+','+net2_ip[i])
         
-        print(vm_list)
         vm_list=json.dumps(vm_list)
 
         extra_vars={
@@ -198,6 +167,7 @@ def new_vm(request):
             'ram':int(ram),
             'vm_list':vm_list,
         }
+
         options={
             'extravars':extra_vars,
             'cmdline':vault_password_cmd,
@@ -205,7 +175,7 @@ def new_vm(request):
         }
         result=run(playbook=playbook_path,**options)
         if result.rc==0:
-            if os=="ub22":
+            if network=='3':
                 for i in range(int(num_vm)):
                     vms=VM(vmrequest=vm_req,ip_addr=ip_address[i],vm_name=vm_name[i],folder_name=folder_name,os=os,template=template)
                     vms.save()
@@ -220,16 +190,41 @@ def new_vm(request):
                 with open(inventory_path, "w") as inventory_file:
                     inventory_file.write(new_ip)
             
-            for i in range(int(num_vm)):
-                vms=VM(vmrequest=vm_req,ip_addr=net2_ip[i],vm_name=vm_name[i],folder_name=folder_name,os=os,template=template)
-                vms.save()
-        
-            ip_address=[f"crange1@{ip}" for ip in net2_ip]
+                for i in range(int(num_vm)):
+                    vms=VM(vmrequest=vm_req,ip_addr=net2_ip[i],vm_name=vm_name[i],folder_name=folder_name,os=os,template=template)
+                    vms.save()
+            
+                ip_address=[f"crange1@{ip}" for ip in net2_ip]
 
-            new_ip="\n".join(ip_address)+"\n"
-        
-            with open(inventory_path, "a") as inventory_file:
-                inventory_file.write(new_ip)
+                new_ip="\n".join(ip_address)+"\n"
+            
+                with open(inventory_path, "a") as inventory_file:
+                    inventory_file.write(new_ip)
+            elif network=='2':
+                for i in range(int(num_vm)):
+                    vms=VM(vmrequest=vm_req,ip_addr=ip_address[i],vm_name=vm_name[i],folder_name=folder_name,os=os,template=template)
+                    vms.save()
+            
+                ip_address=[f"crange1@{ip}" for ip in ip_address]
+
+                new_ip="\n".join(ip_address)+"\n"
+            
+                with open(inventory_path, "a") as inventory_file:
+                    inventory_file.write(new_ip)
+            else:
+                for i in range(int(num_vm)):
+                    vms=VM(vmrequest=vm_req,ip_addr=ip_address[i],vm_name=vm_name[i],folder_name=folder_name,os=os,template=template)
+                    vms.save()
+                
+                with open(inventory_path, "r") as inventory_file:
+                    existing=inventory_file.read()
+            
+                ip_address=[f"crange1@{ip}" for ip in ip_address]
+
+                new_ip="\n".join(ip_address)+"\n"+existing
+            
+                with open(inventory_path, "w") as inventory_file:
+                    inventory_file.write(new_ip)
             
             return JsonResponse({'success':True,'message':"VM's created"})
         else:

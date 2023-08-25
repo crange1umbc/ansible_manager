@@ -47,6 +47,7 @@ class VMRequest(models.Model):
     end_date=models.CharField(max_length=200, null=True)
     self_sudo=models.CharField(max_length=200, null=True)
     vm_users=models.TextField(null=True)
+    network=models.CharField(max_length=200, null=True)
     vm_user_file=models.FileField(upload_to='vm_users/', null=True)
     status=models.CharField(max_length=200, null=True)
 

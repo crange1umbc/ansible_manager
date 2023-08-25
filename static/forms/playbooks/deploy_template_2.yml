@@ -30,7 +30,6 @@
         password: "{{vcenter_password}}"
         validate_certs: "{{vcenter_validate_certs}}"
         datacenter: "{{vcenter_datacenter}}"
-        #cluster: "{{vcenter_cluster}}"
         name: "{{item.split(',')[0]}}"
         folder: "{{create_folder_name}}"
         template: "{{create_template}}"
@@ -39,24 +38,15 @@
           memory_mb: "{{ram}}"
           num_cpus: "{{cpu}}"
         networks:
-          - name: "{{vm_network}}"
+          - name: "{{vm_network1}}"
+            start_connected: false
+            connected: false
+            
+          - name: "{{vm_network2}}"
             ip: "{{item.split(',')[1]}}"
-            netmask: "255.255.255.0"
-            gateway: "130.85.121.1"
-
-          - name: "VLAN4093"
-            ip: "{{item.split(',')[2]}}"
             netmask: "255.255.192.0"
       
       loop: "{{vm_list}}"
       loop_control:
         loop_var: item
       register: vm_deploy_results
-     
-
-    
-        
-   
-      
-      
-
