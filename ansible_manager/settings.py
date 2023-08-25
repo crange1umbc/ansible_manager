@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-3e!+vg9^sn7*mdqcbml87g)d*2sd9#_5iblag&4bl5mo@m$zls
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['130.85.29.155','127.0.0.1','ansible1.crange.umbc.edu']
+ALLOWED_HOSTS = ['130.85.29.155','127.0.0.1','ansible1.crange.umbc.edu','ansible-virtual-manager.com','www.ansible-virtual-manager.com']
 
 
 # Application definition

@@ -18,17 +18,13 @@ import yaml
 load_dotenv()
 # Create your views here.
 
-become_password='Crcsee2#'
+become_password=os.environ.get('BECOME_PASSWORD')
 static=settings.STATIC_ROOT
 
-VM_TEMPLATES={
-   'kali':'CyberRange/vm/bhargavi/kali-22-temp',
-   'ub20':'CyberRange/vm/bhargavi/ub-20-temp',
-   'ub22-16':'CyberRange/vm/bhargavi/ub-22-16-temp',
-   'ub22-40':'CyberRange/vm/bhargavi/ub-22-40-temp',
-   'ub22-100':'CyberRange/vm/bhargavi/ub-22-100-temp',
-}
+template_path=static+'/forms/playbooks/template.yml'
 
+with open(template_path,"r") as yaml_file:
+    VM_TEMPLATES=yaml.safe_load(yaml_file)
 
 inventory_path=static+'/forms/playbooks/inventory'
 vault_password_cmd='--vault-password-file '+static+'/forms/playbooks/pass.txt'
@@ -36,8 +32,6 @@ ssh_key_path=static+'/forms/playbooks/ansible'
 
 with open(ssh_key_path,'r') as key_file:
     private_key_file=key_file.read()
-
-#ansible_runner_config_file=static+'/forms/playbooks/ansible.cfg'
 
 def dashboard(request):
     exercises=Exercise.objects.all()

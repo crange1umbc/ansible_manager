@@ -32,7 +32,7 @@ class VMRequest(models.Model):
     course_number=models.CharField(max_length=200, null=True)
     course_name=models.CharField(max_length=200)
     instructor_name=models.CharField(max_length=200)
-    ta_name=models.CharField(max_length=200)
+    ta_name=models.CharField(max_length=200, null=True)
     description=models.TextField(null=True)
     semester=models.CharField(max_length=200)
     year=models.PositiveSmallIntegerField()
