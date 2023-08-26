@@ -124,7 +124,10 @@ def new_vm(request):
         for i in range(int(num_vm)):
             vm_name.append(course_number+instructor_name.split(' ')[0]+'-'+str(req_id)+os+'-'+str(i+1))
 
-        template=VM_TEMPLATES[f'{os}-{network}-{hard_disk}']
+        template=VM_TEMPLATES.get(f'{os}-{network}-{hard_disk}',"")
+
+        if template=='':
+            return JsonResponse({'success':False,'message':"Sorry, currently the template for your required configuration is not present."})
 
         if network=='1':
             playbook_path=static+'/forms/playbooks/deploy_template_1.yml'
@@ -255,8 +258,11 @@ def power_on(request):
             vms=[vm.strip() for vm in request.POST.get('vm_name').split(',')]
             vm_list=[]
             for vm in vms:
-                folder,ip=vm.split('/')
-                vm_list.append(folder+','+ip)
+                if len(vm.split('/'))==2:
+                    folder,ip=vm.split('/')
+                    vm_list.append(folder+','+ip)
+                else:
+                    return JsonResponse({'success':False,'message':"Folder name not provided properly"})
             
             machine_list=json.dumps(vm_list)
 
@@ -298,8 +304,11 @@ def power_off(request):
             vms=[vm.strip() for vm in request.POST.get('vm_name').split(',')]
             vm_list=[]
             for vm in vms:
-                folder,ip=vm.split('/')
-                vm_list.append(folder+','+ip)
+                if len(vm.split('/'))==2:
+                    folder,ip=vm.split('/')
+                    vm_list.append(folder+','+ip)
+                else:
+                   return JsonResponse({'success':False,'message':"Folder name not provided properly"}) 
             
             machine_list=json.dumps(vm_list)
 
@@ -342,8 +351,11 @@ def restart(request):
             vms=[vm.strip() for vm in request.POST.get('vm_name').split(',')]
             vm_list=[]
             for vm in vms:
-                folder,ip=vm.split('/')
-                vm_list.append(folder+','+ip)
+                if vm.split('/')==2:
+                    folder,ip=vm.split('/')
+                    vm_list.append(folder+','+ip)
+                else:
+                    return JsonResponse({'success':False,'message':"Folder name not provided properly"}) 
             
             machine_list=json.dumps(vm_list)
 
