@@ -2,3 +2,4 @@ myenv/
 db.sqlite3
 .env
 media/
+config.json

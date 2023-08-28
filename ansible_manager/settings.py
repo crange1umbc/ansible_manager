@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -26,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-3e!+vg9^sn7*mdqcbml87g)d*2sd9#_5iblag&4bl5mo@m$zls'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['130.85.29.155','127.0.0.1','ansible1.crange.umbc.edu','ansible-virtual-manager.com','www.ansible-virtual-manager.com']
 
@@ -151,8 +152,13 @@ EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST='smtp.gmail.com'
 EMAIL_PORT=587
 EMAIL_USE_TLS=True
-EMAIL_HOST_USER=os.environ.get('EMAIL_USER')
-EMAIL_HOST_PASSWORD=os.environ.get('EMAIL_PASS')
+
+config_path='/home/crange1/ansible_manager/ansible_manager/config.json'
+with open(config_path) as config_file:
+    config=json.load(config_file)
+
+EMAIL_HOST_USER=config['email']
+EMAIL_HOST_PASSWORD=config['password']
 
 SECURE_PROXY_SSL_HEADER=('HTTP_X_FORWARDED_PROTO','https')
 SESSION_COOKIE_SECURE=True
