@@ -4,8 +4,15 @@
 'ub22-3-16': 'CyberRange/vm/bhargavi/ub-22-16-temp'
 'ub22-3-40': 'CyberRange/vm/bhargavi/ub-22-40-temp'
 'ub22-3-100': 'CyberRange/vm/bhargavi/ub-22-100-temp'
+'kali-3-80': 'CyberRange/vm/Templates/Tmpl-Cybr644-Kali'
+'ub8-2-8': 'CyberRange/vm/Templates/Tmpl-Cybr644-Victim1'
+'ub8-3-8': 'CyberRange/vm/Templates/Tmpl-Cybr644-Victim2'
+'ub14-2-40': 'CyberRange/vm/Templates/Tmpl-Cybr644-Victim3'
+'ub14-2-20': 'CyberRange/vm/Templates/Tmpl-Cybr644-Victim4'
+'win7-2-40': 'CyberRange/vm/Templates/Tmpl-Cybr644-Victim-Win7'
+'winXP-2-20': 'CyberRange/vm/Templates/Tmpl-Cybr644-Victim-WinXP'
 
-# osname-network type-harddisk in GB
+# {osname}-{network type}-{harddisk in GB}
 
 # networktype
 # 1 => VLAN 3072

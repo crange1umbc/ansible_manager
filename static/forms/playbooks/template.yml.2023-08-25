@@ -1,0 +1,15 @@
+---
+'kali-2-16': 'CyberRange/vm/bhargavi/kali-22-temp'
+'ub20-2-16': 'CyberRange/vm/bhargavi/ub-20-temp'
+'ub22-3-16': 'CyberRange/vm/bhargavi/ub-22-16-temp'
+'ub22-3-40': 'CyberRange/vm/bhargavi/ub-22-40-temp'
+'ub22-3-100': 'CyberRange/vm/bhargavi/ub-22-100-temp'
+
+# osname-network type-harddisk in GB
+
+# networktype
+# 1 => VLAN 3072
+# 2 => VLAN 4093
+# 3 => Both
+
+

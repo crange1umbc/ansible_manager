@@ -55,8 +55,11 @@
                             <option value="kali">Kali 22</option>
                             <option value="ub20">Ubuntu-20</option>
                             <option value="ub22" selected>Ubuntu-22</option>
-                            <!-- <option value="win7">Windows 7</option>
-                            <option value="win8">Windows 8</option> -->
+                            <option value="ub8" >Ubuntu-8</option>
+                            <option value="ub14" >Ubuntu-14</option>
+                            <option value="win7" >Windows 7</option>
+                            <option value="winXP" >Windows XP</option>
+                            
                         </select>
                     </div>
                     <div class="form-group col-md-12">
@@ -91,8 +94,11 @@
                     <div class="form-group col-md-12" id="hd">
                         <label for="conf">Select Hard-disk in GB</label>
                         <select class='form-select' name="conf" id="conf">
-                            <option value="16" selected>16 GB Hard Disk</option>
+                            <option value="8" selected>8 GB Hard Disk</option>
+                            <option value="16">16 GB Hard Disk</option>
+                            <option value="20">20 GB Hard Disk</option>
                             <option value="40">40 GB Hard Disk</option>
+                            <option value="80">80 GB Hard Disk</option>
                             <option value="100">100 GB Hard Disk</option>
                             <!-- <option value="win7">Windows 7</option>
                             <option value="win8">Windows 8</option> -->
@@ -150,17 +156,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
 <script>
 
-    const source=document.getElementById('os')
-    const target=document.getElementById('hd')
+    // const source=document.getElementById('os')
+    // const target=document.getElementById('hd')
 
-    source.addEventListener('change',function(){
-        if (source.value!='ub22'){
-            target.style.display='none';
-        }
-        else{
-            target.style.display='block';
-        }
-    });
+    // source.addEventListener('change',function(){
+    //     if (source.value!='ub22'){
+    //         target.style.display='none';
+    //     }
+    //     else{
+    //         target.style.display='block';
+    //     }
+    // });
 
     var spinner=$('#loader');
     $(function(){
